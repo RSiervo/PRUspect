@@ -1,0 +1,105 @@
+@import 'tailwindcss';
+@import '@fontsource-variable/inter';
+
+/* Design tokens. Brand red follows the approved mockup; adjust here to rebrand. */
+@theme {
+  --font-sans: 'Inter Variable', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+
+  --color-brand-50: #fff1f2;
+  --color-brand-100: #ffe2e5;
+  --color-brand-200: #ffc9cf;
+  --color-brand-300: #fd9ba6;
+  --color-brand-400: #f6637a;
+  --color-brand-500: #e83552;
+  --color-brand-600: #c8102e;
+  --color-brand-700: #a80d27;
+  --color-brand-800: #8c1027;
+  --color-brand-900: #771227;
+  --color-brand-950: #430410;
+
+  --color-ink-50: #f8f7f7;
+  --color-ink-100: #f1eeee;
+  --color-ink-200: #e5e0e1;
+  --color-ink-300: #cfc7c8;
+  --color-ink-400: #a39a9c;
+  --color-ink-500: #7a7072;
+  --color-ink-600: #5c5355;
+  --color-ink-700: #463e40;
+  --color-ink-800: #2e2829;
+  --color-ink-900: #1c1718;
+
+  --color-canvas: #faf6f6;
+  --color-surface: #ffffff;
+  --color-line: #eee7e8;
+
+  --radius-card: 1rem;
+  --shadow-card: 0 1px 2px rgb(60 20 25 / 0.04), 0 4px 16px -6px rgb(60 20 25 / 0.08);
+  --shadow-pop: 0 10px 40px -12px rgb(60 20 25 / 0.25);
+
+  --animate-shimmer: shimmer 1.6s ease-in-out infinite;
+  @keyframes shimmer {
+    0% { background-position: -400px 0; }
+    100% { background-position: 400px 0; }
+  }
+}
+
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+    -webkit-tap-highlight-color: transparent;
+  }
+  body {
+    @apply bg-canvas text-ink-800 font-sans antialiased;
+    font-feature-settings: 'cv11', 'ss01';
+  }
+  :focus-visible {
+    @apply outline-2 outline-offset-2 outline-brand-500;
+  }
+  ::selection {
+    @apply bg-brand-100 text-brand-900;
+  }
+}
+
+@layer components {
+  .card {
+    @apply rounded-[var(--radius-card)] border border-line bg-surface shadow-[var(--shadow-card)];
+  }
+  .skeleton {
+    background: linear-gradient(90deg, var(--color-ink-100) 0%, var(--color-ink-50) 50%, var(--color-ink-100) 100%);
+    background-size: 800px 100%;
+    @apply animate-shimmer rounded-md;
+  }
+  .tabular {
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+/* Respect reduced motion everywhere (Motion components also check this). */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Tailwind v4 positions with the `translate` property, so these transforms don't clash. */
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes dialog-in {
+  from { opacity: 0; transform: translateY(14px) scale(0.98); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes pop-in {
+  from { opacity: 0; transform: translateY(-4px) scale(0.98); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes drawer-in {
+  from { transform: translateX(-100%); }
+  to { transform: none; }
+}

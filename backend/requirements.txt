@@ -1,0 +1,10 @@
+Django>=5.2,<5.3
+djangorestframework>=3.16,<3.17
+djangorestframework-simplejwt>=5.5,<6
+django-filter>=25.1
+django-cors-headers>=4.7,<5
+psycopg[binary]>=3.2,<3.4
+dj-database-url>=3.0,<4
+python-dotenv>=1.1,<2
+tzdata
+gunicorn>=23,<24; sys_platform != "win32"

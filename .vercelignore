@@ -1,0 +1,14 @@
+# Never upload secrets, local databases or build artifacts to Vercel.
+.env
+.env.*
+**/.env
+**/.env.*
+.pgdata/
+backups/
+**/node_modules/
+backend/.venv/
+backend/staticfiles/
+frontend/dist/
+frontend/coverage/
+**/__pycache__/
+*.log

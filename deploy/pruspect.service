@@ -1,0 +1,19 @@
+# /etc/systemd/system/pruspect.service — Gunicorn for the Django API.
+[Unit]
+Description=PRUspect API (Gunicorn)
+After=network.target postgresql.service
+
+[Service]
+User=pruspect
+Group=www-data
+WorkingDirectory=/srv/pruspect/backend
+EnvironmentFile=/srv/pruspect/backend/.env
+Environment=DJANGO_SETTINGS_MODULE=config.settings.prod
+ExecStart=/srv/pruspect/backend/.venv/bin/gunicorn config.wsgi:application \
+    --bind 127.0.0.1:8000 --workers 3 --timeout 60 --access-logfile - --error-logfile -
+Restart=on-failure
+NoNewPrivileges=true
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target

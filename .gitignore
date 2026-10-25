@@ -1,0 +1,20 @@
+# Local database cluster (dev only)
+.pgdata/
+# Python
+__pycache__/
+*.pyc
+backend/.venv/
+backend/staticfiles/
+backend/.coverage
+# Env files (keep the examples)
+.env
+.env.*
+!.env.example
+# Node
+node_modules/
+frontend/dist/
+frontend/coverage/
+*.log
+.DS_Store
+# Database backups contain personal data
+backups/
