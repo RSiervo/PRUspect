@@ -4,7 +4,7 @@
   "installCommand": "npm ci --prefix frontend",
   "buildCommand": "npm run build --prefix frontend",
   "outputDirectory": "frontend/dist",
-  "regions": ["sin1"],
+  "regions": ["hnd1"],
   "functions": {
     "api/index.py": {
       "maxDuration": 30,

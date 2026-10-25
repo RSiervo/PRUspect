@@ -378,9 +378,11 @@ Upgrades: pull, `pip install -r requirements.txt`, `migrate`, `collectstatic`, `
 
 One Vercel project serves the built SPA and runs Django as a Python function (`api/index.py`,
 settings `config.settings.vercel`) on the same domain. `vercel.json` routes `/api/*` to Django and
-everything else to the SPA; functions run in Singapore (`sin1`).
+everything else to the SPA. Functions run in Tokyo (`hnd1`, set in `vercel.json`) to sit next to the
+Supabase database (`ap-northeast-1`); if your Supabase project is in another region, change `regions` to
+the matching Vercel region (e.g. `sin1` for Singapore).
 
-1. **Supabase:** create a project in *Southeast Asia (Singapore)*. From *Connect*, copy the
+1. **Supabase:** create a project (this deployment uses *Northeast Asia (Tokyo)*). From *Connect*, copy the
    **Transaction pooler** URI (port 6543, for Vercel) and the **Session pooler** URI (port 5432, for
    migrations from your PC). Append `?sslmode=require` if not present.
 2. **Schema and first user** (from this PC):
