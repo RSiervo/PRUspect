@@ -14,6 +14,8 @@ import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 import { Input, Select } from '@/components/ui/input'
 import { Card, CardHeader, Switch, Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/misc'
 import { useAuth } from '@/features/auth/AuthProvider'
+import { InstallAppDialog } from '@/features/install/InstallApp'
+import { useInstallApp } from '@/lib/pwa'
 import { errorMessage } from '@/lib/api'
 import { REMINDER_OPTIONS } from '@/lib/constants'
 import { COMMON_TIME_ZONES, setTimeZone } from '@/lib/datetime'
@@ -83,6 +85,27 @@ function ProfileTab() {
         </form>
       </Card>
     </div>
+  )
+}
+
+function InstallCard() {
+  const { state } = useInstallApp()
+  const [open, setOpen] = useState(false)
+  return (
+    <Card className="max-w-2xl">
+      <CardHeader title="Install the app" description="Add PRUspect to your phone’s home screen or your computer’s apps." />
+      <div className="flex items-center justify-between gap-3 p-5">
+        <p className="text-sm text-ink-600">
+          {state === 'installed' ? 'You’re using the installed app on this device.' : state === 'ios' ? 'On iPhone/iPad: Share → Add to Home Screen.' : 'Works in Chrome and Edge on Android and desktop, and Safari on iPhone.'}
+        </p>
+        {state !== 'installed' && (
+          <Button variant="secondary" onClick={() => setOpen(true)}>
+            <Download /> Install
+          </Button>
+        )}
+      </div>
+      <InstallAppDialog open={open} onOpenChange={setOpen} />
+    </Card>
   )
 }
 
@@ -260,7 +283,7 @@ export function SettingsPage() {
           <TabsTrigger value="categories">Insurance interests</TabsTrigger>
           <TabsTrigger value="privacy">Data & privacy</TabsTrigger>
         </TabsList>
-        <TabsContent value="preferences"><PreferencesTab /></TabsContent>
+        <TabsContent value="preferences" className="space-y-4"><PreferencesTab /><InstallCard /></TabsContent>
         <TabsContent value="profile"><ProfileTab /></TabsContent>
         <TabsContent value="sources"><ChoiceList kind="sources" /></TabsContent>
         <TabsContent value="categories"><ChoiceList kind="categories" /></TabsContent>

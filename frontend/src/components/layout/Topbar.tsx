@@ -1,5 +1,5 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { Bell, BellOff, CheckCheck, ChevronDown, LogOut, Search, Settings as SettingsIcon, UserRound } from 'lucide-react'
+import { Bell, BellOff, CheckCheck, ChevronDown, Download, LogOut, Search, Settings as SettingsIcon, UserRound } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router'
 
@@ -19,6 +19,8 @@ import {
   PopoverTrigger,
 } from '@/components/ui/menu'
 import { useAuth } from '@/features/auth/AuthProvider'
+import { InstallAppDialog } from '@/features/install/InstallApp'
+import { useInstallApp } from '@/lib/pwa'
 import { useDebouncedValue } from '@/hooks'
 import { timeAgo } from '@/lib/datetime'
 import { qk } from '@/lib/queryKeys'
@@ -209,8 +211,11 @@ export function NotificationBell() {
 export function UserMenu({ compact }: { compact?: boolean }) {
   const { user, logout } = useAuth()
   const navigate = useNavigate()
+  const { state: installState } = useInstallApp()
+  const [installOpen, setInstallOpen] = useState(false)
   if (!user) return null
   return (
+    <>
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <button
@@ -236,6 +241,11 @@ export function UserMenu({ compact }: { compact?: boolean }) {
         <DropdownMenuItem onSelect={() => navigate('/settings')}>
           <SettingsIcon /> Settings
         </DropdownMenuItem>
+        {installState !== 'installed' && (
+          <DropdownMenuItem onSelect={() => setInstallOpen(true)}>
+            <Download /> Install app
+          </DropdownMenuItem>
+        )}
         <DropdownMenuSeparator />
         <DropdownMenuItem
           tone="danger"
@@ -248,5 +258,7 @@ export function UserMenu({ compact }: { compact?: boolean }) {
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
+    <InstallAppDialog open={installOpen} onOpenChange={setInstallOpen} />
+    </>
   )
 }

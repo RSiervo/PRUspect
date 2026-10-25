@@ -361,6 +361,20 @@ Prospect list filters: `search`, `status` (comma list), `priority`, `source`, `i
 
 ---
 
+## Install as an app (PWA)
+
+PRUspect is an installable web app (`frontend/public/manifest.webmanifest`, `frontend/public/sw.js`).
+
+- **Android / desktop Chrome or Edge:** account menu → *Install app* (or the install icon in the address bar).
+- **iPhone / iPad:** Safari → Share → *Add to Home Screen* (the app shows these steps).
+- The service worker caches only the app's own static files for fast start-up. It **never caches `/api/`
+  responses**, so prospect data is not stored on the device. Bump `VERSION` in `sw.js` to force clients to
+  refresh cached files after a deployment that changes `sw.js` itself (normal builds update automatically
+  because asset file names are content-hashed).
+- Icons in `frontend/public/icons/` (regular, maskable and Apple touch sizes).
+
+---
+
 ## Production deployment
 
 Example for Ubuntu with Nginx + Gunicorn + PostgreSQL, serving the SPA and API on one origin.
