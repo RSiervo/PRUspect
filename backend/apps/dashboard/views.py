@@ -67,3 +67,12 @@ class ActivityFeedView(APIView):
         upcoming = FollowUpSerializer(base.filter(scheduled_at__gte=start).order_by("scheduled_at")[:6], many=True,
                                       context=context).data
         return Response({"recent": recent, "overdue": overdue, "upcoming": upcoming})
+
+
+class TodayView(APIView):
+    def get(self, request):
+        data = metrics.today(request.user)
+        context = {"request": request, "today_range": today_bounds(request.user)}
+        data["agenda"] = FollowUpSerializer(data["agenda"], many=True, context=context).data
+        data["overdue"] = FollowUpSerializer(data["overdue"], many=True, context=context).data
+        return Response(data)

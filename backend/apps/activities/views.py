@@ -14,12 +14,13 @@ from apps.prospects.filters import CharInFilter
 from apps.common.timeutils import day_range, day_start, local_today, parse_date_param, user_tz
 
 from . import services
-from .models import APPOINTMENT_TYPES, Activity, FollowUp, FollowUpStatus
+from .models import APPOINTMENT_TYPES, Activity, FollowUp, FollowUpStatus, MessageTemplate
 from .serializers import (
     ActivitySerializer,
     CancelSerializer,
     CompleteFollowUpSerializer,
     FollowUpSerializer,
+    MessageTemplateSerializer,
     RescheduleSerializer,
 )
 
@@ -250,3 +251,18 @@ class CalendarEventsView(APIView):
             for f in queryset.order_by("scheduled_at")
         ]
         return Response({"start": start, "end": end, "time_zone": str(tz), "events": events})
+
+
+class MessageTemplateViewSet(viewsets.ModelViewSet):
+    """The user's reusable message templates (placeholders are filled in on the device)."""
+
+    serializer_class = MessageTemplateSerializer
+    http_method_names = ["get", "post", "patch", "delete", "head", "options"]
+    pagination_class = None
+    filter_backends = []
+
+    def get_queryset(self):
+        return MessageTemplate.objects.filter(owner=self.request.user)
+
+    def perform_create(self, serializer):
+        serializer.save(owner=self.request.user)

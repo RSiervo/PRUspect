@@ -1,5 +1,5 @@
 import { useMutation, useQuery } from '@tanstack/react-query'
-import { Archive, ArchiveRestore, ArrowLeft, CalendarPlus, Mail, MessageSquareText, MoreHorizontal, Pencil, PencilLine, Phone, Trash2 } from 'lucide-react'
+import { Archive, ArchiveRestore, ArrowLeft, CalendarPlus, Mail, MessageSquareText, MoreHorizontal, Pencil, PencilLine, Phone, Send, Trash2 } from 'lucide-react'
 import { useState } from 'react'
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router'
 import { toast } from 'sonner'
@@ -36,7 +36,7 @@ export function ProspectDetailPage() {
   const navigate = useNavigate()
   const [params, setParams] = useSearchParams()
   const tab = TABS.some((t) => t.value === params.get('tab')) ? params.get('tab')! : 'overview'
-  const { scheduleFollowUp, logActivity } = useQuickActions()
+  const { scheduleFollowUp, logActivity, trackContact, composeMessage } = useQuickActions()
   const [confirm, setConfirm] = useState<'archive' | 'delete' | null>(null)
   const [confirmName, setConfirmName] = useState('')
 
@@ -79,6 +79,7 @@ export function ProspectDetailPage() {
   }
 
   const ref = { id: prospect.id, full_name: prospect.full_name }
+  const contact = { ...ref, first_name: prospect.first_name, last_name: prospect.last_name, preferred_name: prospect.preferred_name, mobile: prospect.mobile, email: prospect.email, next_follow_up_at: prospect.next_follow_up_at }
 
   return (
     <div>
@@ -136,17 +137,22 @@ export function ProspectDetailPage() {
           <div className="mt-4 flex flex-wrap items-center gap-2 border-t border-line pt-4">
             {prospect.mobile && (
               <Button variant="soft" size="sm" asChild>
-                <a href={`tel:${prospect.mobile}`}><Phone /> Call</a>
+                <a href={`tel:${prospect.mobile}`} onClick={() => trackContact(contact, 'call')}><Phone /> Call</a>
               </Button>
             )}
             {prospect.mobile && (
               <Button variant="soft" size="sm" asChild>
-                <a href={`sms:${prospect.mobile}`}><MessageSquareText /> Text</a>
+                <a href={`sms:${prospect.mobile}`} onClick={() => trackContact(contact, 'sms')}><MessageSquareText /> Text</a>
               </Button>
             )}
             {prospect.email && (
               <Button variant="soft" size="sm" asChild>
-                <a href={`mailto:${prospect.email}`}><Mail /> Email</a>
+                <a href={`mailto:${prospect.email}`} onClick={() => trackContact(contact, 'email')}><Mail /> Email</a>
+              </Button>
+            )}
+            {(prospect.mobile || prospect.email) && (
+              <Button variant="soft" size="sm" onClick={() => composeMessage(contact)} disabled={prospect.is_archived || prospect.do_not_contact}>
+                <Send /> Message
               </Button>
             )}
             <Button variant="soft" size="sm" onClick={() => logActivity({ prospect: ref })} disabled={prospect.is_archived}>

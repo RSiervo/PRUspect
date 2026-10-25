@@ -23,6 +23,7 @@ router.register("notifications", NotificationViewSet, basename="notification")
 router.register("settings/sources", prospects.ProspectSourceViewSet, basename="source")
 router.register("settings/product-categories", prospects.ProductCategoryViewSet, basename="product-category")
 router.register("admin/users", AdminUserViewSet, basename="admin-user")
+router.register("settings/message-templates", activities.MessageTemplateViewSet, basename="message-template")
 
 api_v1 = [
     path("auth/config/", accounts.AuthConfigView.as_view(), name="auth-config"),
@@ -35,6 +36,7 @@ api_v1 = [
     path("settings/", accounts.SettingsView.as_view(), name="settings"),
     path("settings/demo-data/", prospects.DemoDataView.as_view(), name="settings-demo-data"),
     path("dashboard/summary/", dashboard.SummaryView.as_view(), name="dashboard-summary"),
+    path("dashboard/today/", dashboard.TodayView.as_view(), name="dashboard-today"),
     path("dashboard/pipeline/", dashboard.PipelineSummaryView.as_view(), name="dashboard-pipeline"),
     path("dashboard/activity/", dashboard.ActivityFeedView.as_view(), name="dashboard-activity"),
     path("dashboard/performance/", dashboard.PerformanceView.as_view(), name="dashboard-performance"),

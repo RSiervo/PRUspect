@@ -592,3 +592,37 @@ export interface AdminUserSummary {
   new_this_week: number
   signed_in_this_week: number
 }
+
+export type MessageChannel = 'any' | 'sms' | 'email' | 'whatsapp' | 'viber'
+
+export interface MessageTemplate {
+  id: number
+  name: string
+  channel: MessageChannel
+  subject: string
+  body: string
+  sort_order: number
+  updated_at: string
+}
+
+export interface TodayProspect {
+  id: number
+  full_name: string
+  status: ProspectStatus
+  priority: Priority
+  mobile: string
+  email: string
+  last_contacted_at: string | null
+}
+
+export interface TodayData {
+  date: string
+  agenda: FollowUp[]
+  overdue: FollowUp[]
+  overdue_count: number
+  stale: TodayProspect[]
+  stale_count: number
+  no_next_step: TodayProspect[]
+  no_next_step_count: number
+  definitions: Record<string, string>
+}

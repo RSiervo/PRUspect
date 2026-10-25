@@ -23,9 +23,9 @@ import { qk } from '@/lib/queryKeys'
 import { formatPercent } from '@/lib/utils'
 import { dashboardService } from '@/services'
 
+import { TodayCard } from './TodayCard'
 import {
   ConversionWidget,
-  FollowUpsWidget,
   PerformanceWidget,
   PipelineWidget,
   QuickActionsWidget,
@@ -122,12 +122,11 @@ export function DashboardPage() {
         </KpiGrid>
       )}
 
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2 2xl:grid-cols-3">
+      <TodayCard />
+
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         <PipelineWidget />
         <PerformanceWidget />
-        <div className="lg:col-span-2 2xl:col-span-1">
-          <FollowUpsWidget />
-        </div>
       </div>
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)] 2xl:grid-cols-[minmax(0,1.6fr)_minmax(0,0.9fr)_minmax(0,1.1fr)]">

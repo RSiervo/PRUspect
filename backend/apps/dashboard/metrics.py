@@ -14,7 +14,7 @@ from collections import OrderedDict
 from datetime import date, timedelta
 from decimal import Decimal
 
-from django.db.models import Count, DecimalField, Q, Sum, Value
+from django.db.models import Count, DecimalField, F, Q, Sum, Value
 from django.db.models.functions import Coalesce, TruncMonth
 
 from apps.activities.models import APPOINTMENT_TYPES, FollowUp, FollowUpStatus
@@ -390,4 +390,49 @@ def pipeline_report(user, date_from=None, date_to=None) -> dict:
                         "issued": DEFINITIONS["issued_premium"],
                         "note": "Estimated and issued figures are never added together. Neither represents "
                                 "commission or guaranteed earnings."},
+    }
+
+
+# ------------------------------------------------------------------- today
+
+STALE_DAYS = 30
+
+
+def today(user) -> dict:
+    """Daily worklist: agenda, overdue, prospects going cold, prospects with no next step."""
+    from django.db.models import Exists, OuterRef
+    from django.utils import timezone
+
+    from apps.prospects.statuses import ACTIVE_STATUSES
+
+    tz = user_tz(user)
+    day = local_today(user)
+    start, end = day_range(day, tz)
+    follow_ups = active_follow_ups(user).select_related("prospect")
+    agenda = follow_ups.filter(scheduled_at__gte=start, scheduled_at__lt=end).exclude(status=FollowUpStatus.CANCELED)
+    overdue = follow_ups.filter(status=FollowUpStatus.PENDING, scheduled_at__lt=start)
+
+    cutoff = timezone.now() - timedelta(days=STALE_DAYS)
+    working = active_prospects(user).filter(status__in=ACTIVE_STATUSES, do_not_contact=False)
+    stale = working.filter(Q(last_contacted_at__lt=cutoff) | Q(last_contacted_at__isnull=True, created_at__lt=cutoff))
+    pending = FollowUp.objects.filter(prospect=OuterRef("pk"), status=FollowUpStatus.PENDING)
+    no_next_step = working.annotate(has_next=Exists(pending)).filter(has_next=False)
+
+    def brief(p):
+        return {"id": p.id, "full_name": p.full_name, "status": p.status, "priority": p.priority,
+                "mobile": p.mobile, "email": p.email, "last_contacted_at": p.last_contacted_at}
+
+    return {
+        "date": day,
+        "agenda": list(agenda.order_by("scheduled_at")),
+        "overdue": list(overdue.order_by("scheduled_at")[:10]),
+        "overdue_count": overdue.count(),
+        "stale": [brief(p) for p in stale.order_by(F("last_contacted_at").asc(nulls_first=True))[:8]],
+        "stale_count": stale.count(),
+        "no_next_step": [brief(p) for p in no_next_step.order_by("-priority", "-created_at")[:8]],
+        "no_next_step_count": no_next_step.count(),
+        "definitions": {
+            "stale": f"Active prospects not contacted in the last {STALE_DAYS} days (excludes Do not contact).",
+            "no_next_step": "Active prospects without any pending follow-up.",
+        },
     }

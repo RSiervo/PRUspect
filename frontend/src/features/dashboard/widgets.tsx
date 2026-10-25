@@ -19,7 +19,6 @@ import { Bar, BarChart, CartesianGrid, Legend, ResponsiveContainer, Tooltip, XAx
 import { EmptyState, ErrorState, ListSkeleton } from '@/components/data-display/states'
 import { Button } from '@/components/ui/button'
 import { Card, CardHeader, Segmented, Skeleton } from '@/components/ui/misc'
-import { useFollowUpDialogs, FollowUpItem } from '@/features/follow-ups/FollowUpItem'
 import { useQuickActions } from '@/features/quick-actions/QuickActions'
 import { CHART_COLORS } from '@/lib/constants'
 import { timeAgo } from '@/lib/datetime'
@@ -212,44 +211,6 @@ export function PerformanceWidget() {
           </button>
         </div>
       )}
-    </Card>
-  )
-}
-
-// ---------------------------------------------------------- follow-ups
-
-export function FollowUpsWidget() {
-  const { open, dialogs } = useFollowUpDialogs()
-  const { data, isLoading, error, refetch } = useQuery({ queryKey: [...qk.dashboard, 'activity'], queryFn: dashboardService.activity })
-  const items = [...(data?.overdue ?? []), ...(data?.upcoming ?? [])].slice(0, 6)
-
-  return (
-    <Card className="flex flex-col">
-      <CardHeader
-        title="Upcoming Follow-ups"
-        description={data?.overdue.length ? `${data.overdue.length} overdue shown first` : 'Your next conversations'}
-        action={
-          <Link to="/follow-ups" className="flex items-center gap-1 text-xs font-medium text-ink-500 hover:text-brand-700">
-            View all <ArrowRight className="size-3.5" />
-          </Link>
-        }
-      />
-      <div className="flex-1 pt-2 pb-2">
-        {error ? (
-          <ErrorState error={error} onRetry={refetch} />
-        ) : isLoading ? (
-          <ListSkeleton rows={4} />
-        ) : items.length === 0 ? (
-          <EmptyState compact icon={CheckCircle2} title="Nothing scheduled" description="Schedule a follow-up to keep conversations moving." />
-        ) : (
-          <div className="divide-y divide-line">
-            {items.map((item) => (
-              <FollowUpItem key={item.id} followUp={item} onAction={open} compact />
-            ))}
-          </div>
-        )}
-      </div>
-      {dialogs}
     </Card>
   )
 }

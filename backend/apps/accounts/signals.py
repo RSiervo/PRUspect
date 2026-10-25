@@ -12,6 +12,7 @@ def create_user_defaults(sender, instance, created, raw=False, **kwargs):
         return
     UserSettings.objects.get_or_create(user=instance)
     # Seed the user's configurable sources and product categories.
-    from apps.prospects.defaults import seed_user_choices
+    from apps.prospects.defaults import seed_message_templates, seed_user_choices
 
     seed_user_choices(instance)
+    seed_message_templates(instance)

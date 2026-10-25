@@ -122,3 +122,33 @@ class Activity(models.Model):
 
     def __str__(self) -> str:
         return self.subject
+
+
+class MessageChannel(models.TextChoices):
+    ANY = "any", "Any channel"
+    SMS = "sms", "Text message"
+    EMAIL = "email", "Email"
+    WHATSAPP = "whatsapp", "WhatsApp"
+    VIBER = "viber", "Viber"
+
+
+class MessageTemplate(TimeStampedModel):
+    """Reusable message with placeholders such as {first_name} and {advisor_name}.
+
+    The app only opens the phone's messaging/email app with the text filled in;
+    nothing is sent by the server.
+    """
+
+    owner = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="message_templates")
+    name = models.CharField(max_length=80)
+    channel = models.CharField(max_length=16, choices=MessageChannel.choices, default=MessageChannel.ANY)
+    subject = models.CharField(max_length=160, blank=True, help_text="Email subject (optional).")
+    body = models.TextField(max_length=2000)
+    sort_order = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        ordering = ["sort_order", "name"]
+        constraints = [models.UniqueConstraint(fields=["owner", "name"], name="uniq_template_name_per_owner")]
+
+    def __str__(self) -> str:
+        return self.name

@@ -7,7 +7,7 @@ from apps.common.fields import OwnedPrimaryKeyRelatedField
 from apps.prospects.brief import ProspectBriefSerializer
 from apps.prospects.models import Prospect
 
-from .models import APPOINTMENT_TYPES, Activity, FollowUp, FollowUpReschedule, FollowUpStatus
+from .models import APPOINTMENT_TYPES, Activity, FollowUp, FollowUpReschedule, FollowUpStatus, MessageTemplate
 
 
 class FollowUpInputSerializer(serializers.Serializer):
@@ -112,4 +112,28 @@ class ActivitySerializer(serializers.ModelSerializer):
     def validate_occurred_at(self, value):
         if value > timezone.now() + timedelta(minutes=5):
             raise serializers.ValidationError("Logged activities must have already happened. Schedule a follow-up instead.")
+        return value
+
+
+class MessageTemplateSerializer(serializers.ModelSerializer):
+    PLACEHOLDERS = ["{first_name}", "{last_name}", "{preferred_name}", "{full_name}", "{advisor_name}", "{next_follow_up}"]
+
+    class Meta:
+        model = MessageTemplate
+        fields = ["id", "name", "channel", "subject", "body", "sort_order", "updated_at"]
+        read_only_fields = ["updated_at"]
+
+    def validate_name(self, value):
+        value = value.strip()
+        clash = MessageTemplate.objects.filter(owner=self.context["request"].user, name__iexact=value)
+        if self.instance:
+            clash = clash.exclude(pk=self.instance.pk)
+        if clash.exists():
+            raise serializers.ValidationError("A template with this name already exists.")
+        return value
+
+    def validate_body(self, value):
+        value = value.strip()
+        if not value:
+            raise serializers.ValidationError("Write the message text.")
         return value

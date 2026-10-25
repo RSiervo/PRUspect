@@ -36,3 +36,30 @@ def seed_user_choices(user) -> None:
         ProductCategory.objects.get_or_create(
             owner=user, name=name, defaults={"sort_order": index, "description": description}
         )
+
+
+DEFAULT_MESSAGE_TEMPLATES = [
+    ("First contact", "sms", "",
+     "Hi {preferred_name}, this is {advisor_name}. Thank you for your time! I'd love to share a few options that fit "
+     "your goals. When would be a good time for a quick call?"),
+    ("Meeting reminder", "sms", "",
+     "Hi {preferred_name}! Just a friendly reminder of our meeting on {next_follow_up}. See you then. — {advisor_name}"),
+    ("After the presentation", "email", "Thank you for your time, {first_name}",
+     "Hi {preferred_name},\n\nThank you for meeting with me. As promised, here is a summary of what we discussed. "
+     "Feel free to reply with any questions — I'm happy to help.\n\nBest regards,\n{advisor_name}"),
+    ("Checking in", "any", "",
+     "Hi {preferred_name}, hope you're well! Just checking in — let me know if you'd like to continue our "
+     "conversation about your plans. — {advisor_name}"),
+    ("Referral thank-you", "any", "",
+     "Hi {preferred_name}, thank you for trusting me. If you know anyone who might benefit from a quick review of "
+     "their protection, I'd be grateful for an introduction. — {advisor_name}"),
+]
+
+
+def seed_message_templates(user) -> None:
+    from apps.activities.models import MessageTemplate
+
+    for index, (name, channel, subject, body) in enumerate(DEFAULT_MESSAGE_TEMPLATES):
+        MessageTemplate.objects.get_or_create(
+            owner=user, name=name, defaults={"channel": channel, "subject": subject, "body": body, "sort_order": index}
+        )

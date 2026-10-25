@@ -11,6 +11,8 @@ import type {
   ConversionData,
   DashboardSummary,
   DuplicateMatch,
+  MessageTemplate,
+  TodayData,
   FollowUp,
   FollowUpInput,
   FollowUpSummary,
@@ -157,6 +159,7 @@ export const calendarService = {
 // ------------------------------------------------------------- dashboard
 export const dashboardService = {
   summary: () => api.get<DashboardSummary>('/dashboard/summary/'),
+  today: () => api.get<TodayData>('/dashboard/today/'),
   pipeline: () => api.get<{ stages: StageCount[] }>('/dashboard/pipeline/'),
   activity: () => api.get<ActivityFeed>('/dashboard/activity/'),
   performance: (period: 'monthly' | 'quarterly') => api.get<PerformanceData>('/dashboard/performance/', { period }),
@@ -208,4 +211,12 @@ export const adminService = {
   summary: () => api.get<AdminUserSummary>('/admin/users/summary/'),
   deactivate: (id: number) => api.post<AdminUser>(`/admin/users/${id}/deactivate/`),
   reactivate: (id: number) => api.post<AdminUser>(`/admin/users/${id}/reactivate/`),
+}
+
+// ------------------------------------------------------------ message templates
+export const templateService = {
+  list: () => api.get<MessageTemplate[]>('/settings/message-templates/'),
+  create: (data: Partial<MessageTemplate>) => api.post<MessageTemplate>('/settings/message-templates/', data),
+  update: (id: number, data: Partial<MessageTemplate>) => api.patch<MessageTemplate>(`/settings/message-templates/${id}/`, data),
+  remove: (id: number) => api.delete(`/settings/message-templates/${id}/`),
 }
