@@ -1,0 +1,68 @@
+name: Nightly database backup
+
+# Every night at 2:00 AM Philippine time: dump the PRUspect tables, check the
+# dump, encrypt it with a passphrase (AES-256), and keep it as a workflow
+# artifact for 30 days. The repository is public, so the file is NEVER stored
+# unencrypted. A failed run emails the repository owner.
+#
+# Repository secrets needed (Settings -> Secrets and variables -> Actions):
+#   BACKUP_DATABASE_URL  Supabase *session pooler* URL (port 5432)
+#   BACKUP_PASSPHRASE    long random passphrase; keep a copy somewhere safe,
+#                        without it the backups cannot be opened
+#
+# Restore: see "Backups" in README.md.
+
+on:
+  schedule:
+    - cron: "0 18 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Check secrets
+        env:
+          BACKUP_DATABASE_URL: ${{ secrets.BACKUP_DATABASE_URL }}
+          BACKUP_PASSPHRASE: ${{ secrets.BACKUP_PASSPHRASE }}
+        run: |
+          if [ -z "$BACKUP_DATABASE_URL" ] || [ -z "$BACKUP_PASSPHRASE" ]; then
+            echo "Set the BACKUP_DATABASE_URL and BACKUP_PASSPHRASE repository secrets."; exit 1
+          fi
+          if [ ${#BACKUP_PASSPHRASE} -lt 20 ]; then echo "BACKUP_PASSPHRASE must be at least 20 characters."; exit 1; fi
+
+      - name: Dump database (PostgreSQL 17 client)
+        env:
+          BACKUP_DATABASE_URL: ${{ secrets.BACKUP_DATABASE_URL }}
+        run: |
+          mkdir -p out && chmod 777 out
+          docker run --rm -e BACKUP_DATABASE_URL -v "$PWD/out:/out" postgres:17 \
+            sh -c 'pg_dump "$BACKUP_DATABASE_URL" --schema=public --format=custom --no-owner --no-privileges --file=/out/pruspect.dump'
+          docker run --rm -v "$PWD/out:/out" postgres:17 pg_restore --list /out/pruspect.dump > out/contents.txt
+          tables=$(grep -c " TABLE DATA public " out/contents.txt || true)
+          echo "Tables in backup: $tables"
+          if [ "$tables" -lt 10 ]; then echo "Backup looks incomplete."; exit 1; fi
+          rm out/contents.txt
+
+      - name: Encrypt
+        env:
+          BACKUP_PASSPHRASE: ${{ secrets.BACKUP_PASSPHRASE }}
+        run: |
+          name="pruspect-$(date -u +%Y-%m-%d).dump.gpg"
+          printf '%s' "$BACKUP_PASSPHRASE" | gpg --batch --yes --pinentry-mode loopback --passphrase-fd 0 \
+            --symmetric --cipher-algo AES256 --output "out/$name" out/pruspect.dump
+          shred -u out/pruspect.dump
+          ls -l out
+          echo "BACKUP_FILE=out/$name" >> "$GITHUB_ENV"
+
+      - name: Keep encrypted backup for 30 days
+        uses: actions/upload-artifact@v4
+        with:
+          name: pruspect-backup-${{ github.run_number }}
+          path: ${{ env.BACKUP_FILE }}
+          retention-days: 30
+          if-no-files-found: error

@@ -26,8 +26,12 @@ opportunities, dashboard metrics and reports.
 9. [Security](#security)
 10. [Privacy, retention and deletion](#privacy-retention-and-deletion)
 11. [Backups](#backups)
-12. [Production deployment](#production-deployment)
-13. [Known limitations](#known-limitations)
+12. [Phone notifications and the scheduler](#phone-notifications-and-the-scheduler)
+13. [Error alerts](#error-alerts)
+14. [Two-step verification](#two-step-verification)
+15. [Rotating secrets](#rotating-secrets)
+16. [Production deployment](#production-deployment)
+17. [Known limitations](#known-limitations)
 
 ---
 
@@ -115,9 +119,10 @@ backend/
     opportunities/  InsuranceOpportunity, pipeline board view
     dashboard/      metrics.py — every KPI/report calculation lives here
     reports/        report endpoints + CSV export
-    notifications/  in-app reminders, generate_reminders command
+    notifications/  in-app reminders, Web Push, scheduler endpoint, generate_reminders command
+    monitoring/     error tracking (server + browser) and admin alerts
     audit/          AuditLog + record()/diff() helpers
-  tests/            73 API/service tests
+  tests/            API/service tests
 frontend/src/
   app/              router
   components/       ui/ (button, dialog, menus…), layout/, forms/, data-display/
@@ -153,6 +158,10 @@ Backend (`backend/.env`, see `backend/.env.example`):
 | `GOOGLE_CLIENT_ID` | Enables "Continue with Google" (OAuth Web client ID). Unset = button hidden |
 | `GOOGLE_SIGNUP_ENABLED` | `True` lets new people create accounts with Google (default `True`) |
 | `GOOGLE_ALLOWED_DOMAINS` | Optional comma list limiting Google sign-up to these email domains |
+| `VAPID_PUBLIC_KEY` / `VAPID_PRIVATE_KEY` / `VAPID_SUBJECT` | Phone/desktop push notifications (see below). Unset = push off, in-app reminders still work |
+| `CRON_SECRET` | Shared secret for `POST /api/v1/cron/run/` (the scheduler). Unset = endpoint disabled |
+| `ADMIN_REQUIRE_2FA` | Admin pages require two-step verification (default `True`) |
+| `THROTTLE_CLIENT_ERRORS` | Rate limit for browser error reports (default `30/hour`) |
 
 Frontend (`frontend/.env.local`, optional): `VITE_API_BASE_URL` (default `/api/v1`), `VITE_DEV_API_PROXY`.
 Nothing secret belongs in frontend env files.
@@ -303,6 +312,10 @@ Lists are paginated: `?page=&page_size=` (max 100) → `{count, page, page_size,
 | Reports | `GET reports/prospects/` · `reports/conversion/` · `reports/pipeline/` · `reports/activity/` (all accept `date_from`, `date_to`) · `GET reports/export/?report=acquisition\|sources\|status\|conversion\|activity\|pipeline` |
 | Settings | `GET/PATCH settings/` · `settings/sources/` · `settings/product-categories/` (CRUD; in-use options can only be deactivated) · `GET/DELETE settings/demo-data/` |
 | Notifications | `GET notifications/` · `POST notifications/{id}/read/` · `POST notifications/read-all/` |
+| Push | `GET push/config/` · `POST/DELETE push/subscribe/` · `POST push/test/` |
+| Two-step verification | `GET auth/2fa/` · `POST auth/2fa/setup/` · `auth/2fa/confirm/` · `auth/2fa/disable/` · `auth/2fa/recovery-codes/` · `auth/2fa/verify/` (sign-in step 2) |
+| Admin (staff + 2FA) | `admin/users/` (list, summary, deactivate, reactivate, manager) · `admin/errors/` (list, summary, resolve, reopen, resolve-all, test-alert) |
+| System | `POST errors/report/` (browser crash reports, no sign-in needed) · `POST cron/run/` (Bearer `CRON_SECRET`) · `GET /api/health/` |
 
 Prospect list filters: `search`, `status` (comma list), `priority`, `source`, `interest`,
 `created_from`, `created_to`, `milestone=qualified|application|won`, `stage_kind`, `archived=active|archived|all`,
@@ -324,6 +337,8 @@ Prospect list filters: `search`, `status` (comma list), `priority`, `source`, `i
   return 404. Front-end route guards are only for UX.
 - **Rate limiting:** login 10/min, refresh 60/min per client (configure `REDIS_URL` in production so
   limits are shared across workers).
+- **Two-step verification** (authenticator app) is available to everyone and required for admins
+  before they can open admin pages. See [Two-step verification](#two-step-verification).
 - **CSV exports** neutralize formula injection (`=`, `+`, `-`, `@` prefixes) and are audit-logged.
 - **Audit log** records creates, edits (field-level diffs), status changes, archive/restore/delete,
   notes, follow-up changes, opportunity changes, exports and settings changes — never passwords or tokens.
@@ -352,6 +367,34 @@ Prospect list filters: `search`, `status` (comma list), `priority`, `source`, `i
 
 ## Backups
 
+**Live (Supabase):** `.github/workflows/backup.yml` runs every night at 2:00 AM Philippine time. It
+dumps the `public` schema with `pg_dump` (PostgreSQL 17, matching Supabase), checks the dump lists at
+least 10 tables, **encrypts it with AES-256** using a passphrase, and keeps it as a workflow artifact
+for 30 days. The repository is public, so the dump is never stored unencrypted. A failed run emails the
+repository owner.
+
+Setup (GitHub → repository → *Settings → Secrets and variables → Actions → New repository secret*):
+
+| Secret | Value |
+|---|---|
+| `BACKUP_DATABASE_URL` | Supabase **session pooler** URI (port 5432) |
+| `BACKUP_PASSPHRASE` | Long random passphrase (20+ characters). Store a copy in your password manager — without it the backups can't be opened |
+
+Run it once by hand: *Actions → Nightly database backup → Run workflow*.
+
+Restore (download the artifact from the run's page and unzip it first):
+
+```bash
+gpg --decrypt pruspect-YYYY-MM-DD.dump.gpg > pruspect.dump       # asks for the passphrase
+pg_restore --list pruspect.dump | head                           # look inside
+pg_restore --clean --if-exists --no-owner --dbname="<session pooler URI>" pruspect.dump
+```
+
+Restore into a new, empty Supabase project first if you only need to recover some records.
+Supabase's own daily backups (paid plans) are a second layer.
+
+**Other setups:**
+
 - Development: `.\scripts\dev-db.ps1 backup` → `backups/pruspect-YYYYMMDD-HHMMSS.dump` (git-ignored).
 - Server: `scripts/backup.sh /var/backups/pruspect` (custom-format `pg_dump`, verified with
   `pg_restore --list`, owner-only permissions, 30-day rotation). Schedule nightly via cron and copy the
@@ -372,6 +415,90 @@ PRUspect is an installable web app (`frontend/public/manifest.webmanifest`, `fro
   refresh cached files after a deployment that changes `sw.js` itself (normal builds update automatically
   because asset file names are content-hashed).
 - Icons in `frontend/public/icons/` (regular, maskable and Apple touch sizes).
+
+---
+
+## Phone notifications and the scheduler
+
+Reminders (due and overdue follow-ups, client birthdays, policy anniversaries, premium due dates) are
+created as in-app notifications. With Web Push configured, each new notification is also sent to the
+phones and computers where the user turned on *Settings → Preferences → Phone notifications*. Pushes
+contain only a short title and a link; details open inside the app.
+
+- Generate VAPID keys once and set them on Vercel (and in `backend/.env` locally):
+  ```bash
+  cd backend
+  .venv/Scripts/python -c "from py_vapid import Vapid01 as V; import base64; v=V(); v.generate_keys(); \
+  from cryptography.hazmat.primitives import serialization as s; \
+  pub=v.public_key.public_bytes(s.Encoding.X962, s.PublicFormat.UncompressedPoint); \
+  print('VAPID_PUBLIC_KEY=' + base64.urlsafe_b64encode(pub).decode().rstrip('=')); \
+  print('VAPID_PRIVATE_KEY=' + base64.urlsafe_b64encode(v.private_key.private_numbers().private_value.to_bytes(32,'big')).decode().rstrip('='))"
+  ```
+  `VAPID_SUBJECT` is `mailto:` plus a contact email.
+- **iPhone/iPad:** push works only in the installed app (iOS 16.4+): Share → *Add to Home Screen*, open
+  it from the home screen, then turn notifications on.
+- **Scheduler:** `.github/workflows/scheduler.yml` runs every 30 minutes. It checks `/api/health/`
+  (uptime) and calls `POST /api/v1/cron/run/` with `Authorization: Bearer <CRON_SECRET>`, which creates
+  reminders for every active user so pushes arrive even when nobody has the app open. Repository secrets:
+  `PRUSPECT_URL` (e.g. `https://pruspect.vercel.app`) and `CRON_SECRET` (same value as on Vercel).
+  GitHub may delay scheduled runs by a few minutes, and pauses schedules in repositories with no
+  activity for 60 days (re-enable them on the Actions tab).
+
+---
+
+## Error alerts
+
+- Unhandled server errors (HTTP 500) and browser crashes are recorded in `apps/monitoring` and grouped
+  by fingerprint, so a repeated error increases a counter instead of adding rows. Handled errors
+  (validation, 403, 404) are not recorded.
+- Only technical details are stored: error type, message, page/API path, stack trace, version, and
+  the last affected account. Emails and phone numbers inside messages are masked; request bodies and
+  form values are never stored.
+- Every active admin gets a notification (and a phone push, if turned on) when a **new** error
+  appears or a **resolved** error comes back. Alerts are capped at 10 per admin per hour.
+- Admins review errors on the **System** page (sidebar), mark them resolved, and can send a test alert.
+- If a page crashes, users see a "Something went wrong" screen with Reload instead of a blank page.
+  After a new deployment, a stale page reloads itself once.
+- Uptime: the scheduler workflow fails (and GitHub emails you) when the site or database is down.
+
+---
+
+## Two-step verification
+
+*Settings → Profile & security → Two-step verification → Turn on*, scan the QR code with an
+authenticator app (Google Authenticator, Microsoft Authenticator, 1Password…), enter the 6-digit code,
+and save the 10 recovery codes (shown once; only hashes are stored).
+
+- Sign-in with a password **or Google** then asks for a code. Each code works once; the sign-in step
+  expires after 5 minutes.
+- **Admins must turn it on** before admin pages (Users, System) open. Set `ADMIN_REQUIRE_2FA=False` to
+  relax this.
+- Lost phone: sign in with a recovery code, then turn 2FA off and on again with the new phone. If the
+  recovery codes are lost too, run from your PC with the session pooler URI:
+  ```powershell
+  cd backend
+  $env:DATABASE_URL = "<session pooler URI>"
+  .venv\Scripts\python manage.py reset_2fa someone@example.com
+  Remove-Item Env:DATABASE_URL
+  ```
+- Django's built-in admin site (`/django-admin/`) isn't routed on Vercel, so it can't be used to skip 2FA there.
+
+---
+
+## Rotating secrets
+
+Rotate a secret whenever it may have been seen by someone else (shared in chat, a screenshot, a
+former team member):
+
+| Secret | How | Effect |
+|---|---|---|
+| Supabase database password | Supabase → *Project Settings → Database → Reset database password*. Update `DATABASE_URL` on Vercel, `BACKUP_DATABASE_URL` on GitHub, then **redeploy** | None for users |
+| `DJANGO_SECRET_KEY` | New value: `python -c "import secrets; print(secrets.token_urlsafe(50))"` → Vercel env → redeploy | Everyone is signed out once |
+| `CRON_SECRET` | New random value on Vercel **and** the GitHub secret | None |
+| VAPID keys | Only if the private key leaked. New pair on Vercel | Everyone must turn phone notifications on again |
+| `BACKUP_PASSPHRASE` | New value on GitHub | Older backups still need the old passphrase |
+
+Vercel only applies changed environment variables to **new** deployments: *Deployments → ⋯ → Redeploy*.
 
 ---
 
@@ -434,21 +561,24 @@ dashboard keep **Root Directory** empty and **Framework Preset** on *Other*; `ve
 
 Run `migrate` again from your PC (step 2) whenever a release adds migrations, before deploying.
 Rate limits are per function instance on Vercel; add a shared cache (`REDIS_URL`, e.g. Upstash) for
-strict limits. Reminders are generated whenever the app polls notifications, so no cron is required.
+strict limits. Reminders are generated whenever the app polls notifications and by the scheduler
+workflow (see [Phone notifications and the scheduler](#phone-notifications-and-the-scheduler)).
+
+Also set on Vercel: `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT`, `CRON_SECRET`. GitHub
+repository secrets: `PRUSPECT_URL`, `CRON_SECRET`, `BACKUP_DATABASE_URL`, `BACKUP_PASSPHRASE`.
 
 ---
 
 ## Known limitations
 
-- **Reminders are in-app only.** No email/SMS is sent; that needs an external provider (e.g. an email
-  service or SMS gateway) and a scheduled worker calling it — not implemented.
-- **Single-user design.** Each account sees only its own data; there are no teams, sharing or
-  assigned users.
+- **Reminders are in-app and push only.** No email/SMS is sent; that needs an external provider.
+- **Teams are totals only.** A manager sees team members' counts, never their prospects; there is no
+  record sharing or assignment.
 - **Stage list is fixed in code** (labels editable in `statuses.py`/`constants.ts`); sources and
   insurance categories are configurable in Settings.
 - **No automatic retention purge**; the retention setting is informational.
-- Calendar week view lists events per day rather than an hourly grid; drag-to-reschedule on the
-  calendar is not implemented (use Reschedule).
+- Calendar week view lists events per day rather than an hourly grid. Drag-to-reschedule moves the
+  day and keeps the time.
 - Pipeline drag-and-drop works with mouse/touch; keyboard users use the per-card **Move** menu.
 - Gunicorn does not run on Windows; use `runserver` for local development and Linux for production.
 - `PRU` in the product name may resemble a company brand — confirm naming is acceptable before
