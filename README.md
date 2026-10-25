@@ -376,11 +376,15 @@ Upgrades: pull, `pip install -r requirements.txt`, `migrate`, `collectstatic`, `
 
 ## Deploying to Vercel + Supabase
 
-One Vercel project serves the built SPA and runs Django as a Python function (`api/index.py`,
-settings `config.settings.vercel`) on the same domain. `vercel.json` routes `/api/*` to Django and
-everything else to the SPA. Functions run in Tokyo (`hnd1`, set in `vercel.json`) to sit next to the
-Supabase database (`ap-northeast-1`); if your Supabase project is in another region, change `regions` to
-the matching Vercel region (e.g. `sin1` for Singapore).
+One Vercel project uses [Vercel Services](https://vercel.com/docs/services) (see `vercel.json`):
+
+- `backend` service: Django from `backend/` (Vercel finds `manage.py`; `VERCEL=1` selects
+  `config.settings.vercel`). It receives `/api/*` with the `/api` prefix intact.
+- `frontend` service: the Vite build from `frontend/`, with every other path falling back to `index.html`.
+
+Both share one domain, so the HttpOnly refresh cookie works. Functions run in Tokyo (`hnd1`) next to the
+Supabase database (`ap-northeast-1`); change `regions` if your database is elsewhere. In the Vercel
+dashboard keep **Root Directory** empty and **Framework Preset** on *Other*; `vercel.json` defines the builds.
 
 1. **Supabase:** create a project (this deployment uses *Northeast Asia (Tokyo)*). From *Connect*, copy the
    **Transaction pooler** URI (port 6543, for Vercel) and the **Session pooler** URI (port 5432, for
