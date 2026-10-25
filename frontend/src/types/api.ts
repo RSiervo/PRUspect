@@ -739,3 +739,27 @@ export interface TeamData {
   totals: Record<'prospects' | 'new_this_month' | 'follow_ups_today' | 'overdue' | 'appointments_week' | 'policies_this_month', number>
   note: string
 }
+
+export interface ErrorEvent {
+  id: number
+  source: 'server' | 'browser'
+  error_type: string
+  message: string
+  location: string
+  stack: string
+  release: string
+  count: number
+  users_affected: number
+  last_user_email: string | null
+  first_seen: string
+  last_seen: string
+  resolved_at: string | null
+  is_resolved: boolean
+}
+
+export interface ErrorSummary {
+  open: number
+  seen_last_24h: number
+  occurrences_open: number
+  last_error_at: string | null
+}

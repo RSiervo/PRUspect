@@ -9,6 +9,7 @@ from apps.accounts.team_views import TeamView
 from apps.activities import views as activities
 from apps.dashboard import views as dashboard
 from apps.notifications import views as notification_views
+from apps.monitoring.views import ClientErrorReportView, ErrorEventViewSet
 from apps.notifications.cron_views import CronRunView
 from apps.notifications.views import NotificationViewSet
 from apps.opportunities import views as opportunities
@@ -26,6 +27,7 @@ router.register("notifications", NotificationViewSet, basename="notification")
 router.register("settings/sources", prospects.ProspectSourceViewSet, basename="source")
 router.register("settings/product-categories", prospects.ProductCategoryViewSet, basename="product-category")
 router.register("admin/users", AdminUserViewSet, basename="admin-user")
+router.register("admin/errors", ErrorEventViewSet, basename="admin-error")
 router.register("settings/message-templates", activities.MessageTemplateViewSet, basename="message-template")
 
 api_v1 = [
@@ -61,6 +63,7 @@ api_v1 = [
     path("push/subscribe/", notification_views.PushSubscribeView.as_view(), name="push-subscribe"),
     path("push/test/", notification_views.PushTestView.as_view(), name="push-test"),
     path("cron/run/", CronRunView.as_view(), name="cron-run"),
+    path("errors/report/", ClientErrorReportView.as_view(), name="error-report"),
     path("", include(router.urls)),
 ]
 

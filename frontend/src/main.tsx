@@ -9,9 +9,11 @@ import { Toaster } from 'sonner'
 
 import { router } from '@/app/router'
 import { AuthProvider } from '@/features/auth/AuthProvider'
+import { installErrorReporting } from '@/lib/errorReporting'
 import { registerServiceWorker } from '@/lib/pwa'
 import { queryClient } from '@/lib/queryKeys'
 
+installErrorReporting()
 registerServiceWorker()
 
 createRoot(document.getElementById('root')!).render(

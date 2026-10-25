@@ -5,6 +5,8 @@ import type {
   ActivityReport,
   AdminUser,
   AdminUserSummary,
+  ErrorEvent,
+  ErrorSummary,
   AuthConfig,
   AuthResponse,
   CalendarEvent,
@@ -236,6 +238,15 @@ export const adminService = {
   deactivate: (id: number) => api.post<AdminUser>(`/admin/users/${id}/deactivate/`),
   reactivate: (id: number) => api.post<AdminUser>(`/admin/users/${id}/reactivate/`),
   setManager: (id: number, managerId: number | null) => api.post<AdminUser>(`/admin/users/${id}/manager/`, { manager_id: managerId }),
+}
+
+export const errorService = {
+  list: (params: ListParams) => api.get<Paginated<ErrorEvent>>('/admin/errors/', params),
+  summary: () => api.get<ErrorSummary>('/admin/errors/summary/'),
+  resolve: (id: number) => api.post<ErrorEvent>(`/admin/errors/${id}/resolve/`),
+  reopen: (id: number) => api.post<ErrorEvent>(`/admin/errors/${id}/reopen/`),
+  resolveAll: () => api.post<{ resolved: number }>('/admin/errors/resolve-all/'),
+  testAlert: () => api.post<{ id: number }>('/admin/errors/test-alert/'),
 }
 
 export const teamService = {

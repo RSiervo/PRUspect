@@ -5,6 +5,7 @@ import { EmptyState } from '@/components/data-display/states'
 import { AppLayout } from '@/components/layout/AppLayout'
 import { Button } from '@/components/ui/button'
 import { ActivitiesPage } from '@/features/activities/ActivitiesPage'
+import { AdminSystemPage } from '@/features/admin/AdminSystemPage'
 import { AdminUsersPage } from '@/features/admin/AdminUsersPage'
 import { TeamPage } from '@/features/team/TeamPage'
 import { LoginPage } from '@/features/auth/LoginPage'
@@ -21,6 +22,8 @@ import { ProspectFormPage } from '@/features/prospects/ProspectFormPage'
 import { ProspectsPage } from '@/features/prospects/ProspectsPage'
 import { ReportsPage } from '@/features/reports/ReportsPage'
 import { SettingsPage } from '@/features/settings/SettingsPage'
+
+import { RouteError } from './RouteError'
 
 function NotFound() {
   return (
@@ -40,14 +43,18 @@ function NotFound() {
 }
 
 export const routes = [
-  { path: '/login', element: <LoginPage /> },
-  { path: '/signup', element: <SignupPage /> },
+  { path: '/login', element: <LoginPage />, errorElement: <RouteError /> },
+  { path: '/signup', element: <SignupPage />, errorElement: <RouteError /> },
   {
     element: <RequireAuth />,
+    errorElement: <RouteError />,
     children: [
       {
         element: <AppLayout />,
         children: [
+          {
+            errorElement: <RouteError />,
+            children: [
           { index: true, element: <DashboardPage /> },
           { path: 'prospects', element: <ProspectsPage /> },
           { path: 'prospects/new', element: <ProspectFormPage /> },
@@ -62,8 +69,11 @@ export const routes = [
           { path: 'reports', element: <ReportsPage /> },
           { path: 'settings', element: <SettingsPage /> },
           { path: 'admin/users', element: <AdminUsersPage /> },
+          { path: 'admin/system', element: <AdminSystemPage /> },
           { path: 'team', element: <TeamPage /> },
           { path: '*', element: <NotFound /> },
+            ],
+          },
         ],
       },
     ],

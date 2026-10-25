@@ -1,4 +1,5 @@
 import {
+  Activity,
   BarChart3,
   CalendarDays,
   ClipboardCheck,
@@ -37,6 +38,7 @@ export const NAV_ITEMS: NavItem[] = [
   { to: '/settings', label: 'Settings', icon: Settings },
   { to: '/team', label: 'Team', icon: UsersRound, teamOnly: true },
   { to: '/admin/users', label: 'Users', icon: ShieldCheck, staffOnly: true },
+  { to: '/admin/system', label: 'System', icon: Activity, staffOnly: true },
 ]
 
 export function navItemsFor(isStaff: boolean, hasTeam = false): NavItem[] {
