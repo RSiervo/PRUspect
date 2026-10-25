@@ -25,6 +25,8 @@ class AuditAction(models.TextChoices):
     PASSWORD_CHANGED = "auth.password_changed", "Password changed"
     SIGNED_UP_GOOGLE = "auth.signup_google", "Signed up with Google"
     GOOGLE_LINKED = "auth.google_linked", "Google account linked"
+    USER_DEACTIVATED = "admin.user_deactivated", "Account deactivated"
+    USER_REACTIVATED = "admin.user_reactivated", "Account reactivated"
     DEMO_DATA_REMOVED = "data.demo_removed", "Demo data removed"
 
 

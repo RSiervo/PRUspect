@@ -566,3 +566,29 @@ export interface PipelineReport {
   issued_by_month: { period: string; label: string; count: number; actual_annualized_premium: string }[]
   definitions: Record<string, string>
 }
+
+export interface AdminUser {
+  id: number
+  email: string
+  full_name: string
+  first_name: string
+  last_name: string
+  is_active: boolean
+  is_staff: boolean
+  is_superuser: boolean
+  date_joined: string
+  last_login: string | null
+  sign_in_methods: ('google' | 'password')[]
+  prospect_count: number
+  open_follow_up_count: number
+  is_self: boolean
+}
+
+export interface AdminUserSummary {
+  total: number
+  active: number
+  inactive: number
+  google: number
+  new_this_week: number
+  signed_in_this_week: number
+}

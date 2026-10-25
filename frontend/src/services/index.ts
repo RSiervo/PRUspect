@@ -3,6 +3,8 @@ import type {
   Activity,
   ActivityFeed,
   ActivityReport,
+  AdminUser,
+  AdminUserSummary,
   AuthConfig,
   AuthResponse,
   CalendarEvent,
@@ -198,4 +200,12 @@ export const notificationService = {
   list: () => api.get<NotificationPage>('/notifications/', { page_size: 20 }),
   markRead: (id: number) => api.post<NotificationItem>(`/notifications/${id}/read/`),
   markAllRead: () => api.post<{ updated: number }>('/notifications/read-all/'),
+}
+
+// ------------------------------------------------------------- admin (staff only)
+export const adminService = {
+  users: (params: ListParams) => api.get<Paginated<AdminUser>>('/admin/users/', params),
+  summary: () => api.get<AdminUserSummary>('/admin/users/summary/'),
+  deactivate: (id: number) => api.post<AdminUser>(`/admin/users/${id}/deactivate/`),
+  reactivate: (id: number) => api.post<AdminUser>(`/admin/users/${id}/reactivate/`),
 }

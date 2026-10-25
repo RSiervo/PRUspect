@@ -4,6 +4,7 @@ from django.urls import include, path
 from rest_framework.routers import DefaultRouter
 
 from apps.accounts import views as accounts
+from apps.accounts.admin_views import AdminUserViewSet
 from apps.activities import views as activities
 from apps.dashboard import views as dashboard
 from apps.notifications.views import NotificationViewSet
@@ -21,6 +22,7 @@ router.register("opportunities", opportunities.OpportunityViewSet, basename="opp
 router.register("notifications", NotificationViewSet, basename="notification")
 router.register("settings/sources", prospects.ProspectSourceViewSet, basename="source")
 router.register("settings/product-categories", prospects.ProductCategoryViewSet, basename="product-category")
+router.register("admin/users", AdminUserViewSet, basename="admin-user")
 
 api_v1 = [
     path("auth/config/", accounts.AuthConfigView.as_view(), name="auth-config"),

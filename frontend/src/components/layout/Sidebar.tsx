@@ -9,7 +9,8 @@ import { cn } from '@/lib/utils'
 import { followUpService } from '@/services'
 
 import { Logo, LogoMark, Mountains } from './Logo'
-import { NAV_ITEMS } from './nav'
+import { navItemsFor } from './nav'
+import { useAuth } from '@/features/auth/AuthProvider'
 
 export function useFollowUpBadge() {
   const { data } = useQuery({ queryKey: qk.followUpSummary, queryFn: followUpService.summary, refetchInterval: 120_000 })
@@ -19,6 +20,8 @@ export function useFollowUpBadge() {
 export function Sidebar({ collapsed, onToggle }: { collapsed: boolean; onToggle: () => void }) {
   const reduce = useReducedMotion()
   const badge = useFollowUpBadge()
+  const { user } = useAuth()
+  const items = navItemsFor(Boolean(user?.is_staff))
 
   return (
     <motion.aside
@@ -33,7 +36,7 @@ export function Sidebar({ collapsed, onToggle }: { collapsed: boolean; onToggle:
       </div>
 
       <nav className="flex-1 space-y-1 overflow-y-auto px-3 py-3">
-        {NAV_ITEMS.map((item) => {
+        {items.map((item) => {
           const Icon = item.icon
           const count = item.badge === 'follow-ups' ? badge : 0
           const link = (

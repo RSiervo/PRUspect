@@ -8,7 +8,8 @@ import { cn } from '@/lib/utils'
 import { QuickActionsProvider } from '@/features/quick-actions/QuickActions'
 
 import { Logo } from './Logo'
-import { NAV_ITEMS } from './nav'
+import { navItemsFor } from './nav'
+import { useAuth } from '@/features/auth/AuthProvider'
 import { Sidebar, useFollowUpBadge } from './Sidebar'
 import { GlobalSearch, NotificationBell, UserMenu } from './Topbar'
 
@@ -24,6 +25,8 @@ export function AppLayout() {
   const [drawerOpen, setDrawerOpen] = useState(false)
   const location = useLocation()
   const badge = useFollowUpBadge()
+  const { user } = useAuth()
+  const navItems = navItemsFor(Boolean(user?.is_staff))
 
   useEffect(() => setDrawerOpen(false), [location.pathname])
 
@@ -128,7 +131,7 @@ export function AppLayout() {
             <D.Title className="sr-only">Navigation</D.Title>
             <D.Description className="sr-only">All sections of PRUspect</D.Description>
             <nav className="flex-1 space-y-1 overflow-y-auto px-3 py-2">
-              {NAV_ITEMS.map((item) => {
+              {navItems.map((item) => {
                 const Icon = item.icon
                 return (
                   <NavLink
