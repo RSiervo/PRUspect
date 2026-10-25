@@ -6,6 +6,7 @@ import { AppLayout } from '@/components/layout/AppLayout'
 import { Button } from '@/components/ui/button'
 import { ActivitiesPage } from '@/features/activities/ActivitiesPage'
 import { AdminUsersPage } from '@/features/admin/AdminUsersPage'
+import { TeamPage } from '@/features/team/TeamPage'
 import { LoginPage } from '@/features/auth/LoginPage'
 import { RequireAuth } from '@/features/auth/RequireAuth'
 import { SignupPage } from '@/features/auth/SignupPage'
@@ -61,6 +62,7 @@ export const routes = [
           { path: 'reports', element: <ReportsPage /> },
           { path: 'settings', element: <SettingsPage /> },
           { path: 'admin/users', element: <AdminUsersPage /> },
+          { path: 'team', element: <TeamPage /> },
           { path: '*', element: <NotFound /> },
         ],
       },

@@ -42,6 +42,7 @@ import type {
   ProspectStatus,
   ProspectWrite,
   StageCount,
+  TeamData,
   TimelineEvent,
   User,
   UserSettings,
@@ -234,6 +235,11 @@ export const adminService = {
   summary: () => api.get<AdminUserSummary>('/admin/users/summary/'),
   deactivate: (id: number) => api.post<AdminUser>(`/admin/users/${id}/deactivate/`),
   reactivate: (id: number) => api.post<AdminUser>(`/admin/users/${id}/reactivate/`),
+  setManager: (id: number, managerId: number | null) => api.post<AdminUser>(`/admin/users/${id}/manager/`, { manager_id: managerId }),
+}
+
+export const teamService = {
+  get: () => api.get<TeamData>('/team/'),
 }
 
 // ------------------------------------------------------------ message templates

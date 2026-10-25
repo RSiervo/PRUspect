@@ -69,9 +69,9 @@ export function Sidebar({ collapsed, onToggle }: { collapsed: boolean; onToggle:
   const reduce = useReducedMotion()
   const badge = useFollowUpBadge()
   const { user } = useAuth()
-  const items = navItemsFor(Boolean(user?.is_staff))
-  const main = items.filter((i) => !i.staffOnly && i.to !== '/settings')
-  const secondary = items.filter((i) => i.staffOnly || i.to === '/settings')
+  const items = navItemsFor(Boolean(user?.is_staff), (user?.team_size ?? 0) > 0)
+  const main = items.filter((i) => !i.staffOnly && !i.teamOnly && i.to !== '/settings')
+  const secondary = items.filter((i) => i.staffOnly || i.teamOnly || i.to === '/settings')
 
   return (
     <motion.aside

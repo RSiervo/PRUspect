@@ -66,6 +66,8 @@ export interface User {
   is_staff: boolean
   has_password: boolean
   google_linked: boolean
+  manager: { id: number; full_name: string; email: string } | null
+  team_size: number
 }
 
 export interface AuthConfig {
@@ -592,6 +594,7 @@ export interface AdminUser {
   prospect_count: number
   open_follow_up_count: number
   is_self: boolean
+  manager: { id: number; full_name: string } | null
 }
 
 export interface AdminUserSummary {
@@ -714,4 +717,25 @@ export interface GoalProgress {
   has_goals: boolean
   suggested: Record<GoalField, number | string | null> | null
   definitions: Record<string, string>
+}
+
+export interface TeamMemberRow {
+  id: number
+  full_name: string
+  email: string
+  last_login: string | null
+  prospects: number
+  new_this_month: number
+  follow_ups_today: number
+  overdue: number
+  appointments_week: number
+  policies_this_month: number
+  issued_premium_this_month: string
+  conversion_rate: number | null
+}
+
+export interface TeamData {
+  members: TeamMemberRow[]
+  totals: Record<'prospects' | 'new_this_month' | 'follow_ups_today' | 'overdue' | 'appointments_week' | 'policies_this_month', number>
+  note: string
 }

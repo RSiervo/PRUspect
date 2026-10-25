@@ -174,6 +174,7 @@ export function AdminUsersPage() {
                     <th className="px-3 py-3">Last sign-in</th>
                     <th className="px-3 py-3 text-right">Prospects</th>
                     <th className="px-3 py-3 text-right">Open follow-ups</th>
+                    <th className="px-3 py-3">Manager</th>
                     <th className="px-5 py-3"><span className="sr-only">Actions</span></th>
                   </tr>
                 </thead>
@@ -198,6 +199,7 @@ export function AdminUsersPage() {
                       <td className="px-3 py-3 whitespace-nowrap text-ink-600" title={u.last_login ? formatDateTime(u.last_login) : undefined}>{timeAgo(u.last_login)}</td>
                       <td className="tabular px-3 py-3 text-right text-ink-900">{u.prospect_count}</td>
                       <td className="tabular px-3 py-3 text-right text-ink-900">{u.open_follow_up_count}</td>
+                      <td className="px-3 py-3"><ManagerSelect user={u} /></td>
                       <td className="px-5 py-3 text-right"><ActionButton user={u} onAsk={setTarget} /></td>
                     </tr>
                   ))}
@@ -222,6 +224,7 @@ export function AdminUsersPage() {
                     <span>Last sign-in {timeAgo(u.last_login)}</span>
                     <span>{u.prospect_count} prospects</span>
                   </div>
+                  <div className="flex items-center gap-2 text-xs text-ink-500">Manager: <div className="w-48"><ManagerSelect user={u} /></div></div>
                   <div className="flex justify-end"><ActionButton user={u} onAsk={setTarget} /></div>
                 </li>
               ))}
@@ -248,5 +251,34 @@ export function AdminUsersPage() {
         onConfirm={() => target && toggle.mutate(target)}
       />
     </div>
+  )
+}
+
+function ManagerSelect({ user }: { user: AdminUser }) {
+  const everyone = useQuery({ queryKey: ['admin-users', 'all'], queryFn: () => adminService.users({ page_size: 100, status: 'active', ordering: 'email' }) })
+  const save = useMutation({
+    mutationFn: (managerId: number | null) => adminService.setManager(user.id, managerId),
+    onSuccess: (u) => {
+      toast.success(u.manager ? `${u.email} now reports to ${u.manager.full_name}` : `${u.email} has no manager`)
+      void queryClient.invalidateQueries({ queryKey: ['admin-users'] })
+    },
+    onError: (e) => toast.error(errorMessage(e)),
+  })
+  const options = (everyone.data?.results ?? []).filter((o) => o.id !== user.id)
+  return (
+    <Select
+      aria-label={`Manager for ${user.email}`}
+      value={user.manager?.id ?? ''}
+      disabled={save.isPending || !user.is_active}
+      onChange={(e) => save.mutate(e.target.value ? Number(e.target.value) : null)}
+      className="h-8 text-xs md:h-8"
+    >
+      <option value="">No manager</option>
+      {options.map((o) => (
+        <option key={o.id} value={o.id}>
+          {o.full_name || o.email}
+        </option>
+      ))}
+    </Select>
   )
 }

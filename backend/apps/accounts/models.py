@@ -38,6 +38,8 @@ class User(AbstractBaseUser, PermissionsMixin):
     job_title = models.CharField(max_length=120, blank=True, default="Financial Advisor")
     # Google account subject id ("sub" claim) once the user signs in with Google.
     google_sub = models.CharField(max_length=255, unique=True, null=True, blank=True, editable=False)
+    # Team structure: a manager sees this user's totals (never prospect details).
+    manager = models.ForeignKey("self", on_delete=models.SET_NULL, null=True, blank=True, related_name="team_members")
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
     date_joined = models.DateTimeField(default=timezone.now)

@@ -11,11 +11,13 @@ class UserSerializer(serializers.ModelSerializer):
     time_zone = serializers.CharField(source="settings.time_zone", read_only=True)
     has_password = serializers.SerializerMethodField()
     google_linked = serializers.SerializerMethodField()
+    manager = serializers.SerializerMethodField()
+    team_size = serializers.SerializerMethodField()
 
     class Meta:
         model = User
         fields = ["id", "email", "first_name", "last_name", "full_name", "job_title", "time_zone", "date_joined",
-                  "is_staff", "has_password", "google_linked"]
+                  "is_staff", "has_password", "google_linked", "manager", "team_size"]
         read_only_fields = ["id", "email", "date_joined", "is_staff"]
 
     def get_has_password(self, obj) -> bool:
@@ -23,6 +25,13 @@ class UserSerializer(serializers.ModelSerializer):
 
     def get_google_linked(self, obj) -> bool:
         return bool(obj.google_sub)
+
+    def get_manager(self, obj):
+        m = obj.manager
+        return {"id": m.id, "full_name": m.full_name, "email": m.email} if m and m.is_active else None
+
+    def get_team_size(self, obj) -> int:
+        return obj.team_members.filter(is_active=True).count()
 
 
 class LoginSerializer(serializers.Serializer):

@@ -28,11 +28,12 @@ class AdminUserSerializer(serializers.ModelSerializer):
     prospect_count = serializers.IntegerField(read_only=True)
     open_follow_up_count = serializers.IntegerField(read_only=True)
     is_self = serializers.SerializerMethodField()
+    manager = serializers.SerializerMethodField()
 
     class Meta:
         model = User
         fields = ["id", "email", "full_name", "first_name", "last_name", "is_active", "is_staff", "is_superuser",
-                  "date_joined", "last_login", "sign_in_methods", "prospect_count", "open_follow_up_count", "is_self"]
+                  "date_joined", "last_login", "sign_in_methods", "prospect_count", "open_follow_up_count", "is_self", "manager"]
         read_only_fields = fields
 
     def get_sign_in_methods(self, obj) -> list[str]:
@@ -42,6 +43,9 @@ class AdminUserSerializer(serializers.ModelSerializer):
         if obj.has_usable_password():
             methods.append("password")
         return methods
+
+    def get_manager(self, obj):
+        return {"id": obj.manager_id, "full_name": obj.manager.full_name} if obj.manager_id else None
 
     def get_is_self(self, obj) -> bool:
         return obj.pk == self.context["request"].user.pk
@@ -60,7 +64,7 @@ class AdminUserViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, viewset
     }
 
     def get_queryset(self):
-        queryset = User.objects.annotate(
+        queryset = User.objects.select_related("manager").annotate(
             prospect_count=Count("prospects", filter=Q(prospects__is_archived=False), distinct=True),
             open_follow_up_count=Count("follow_ups", filter=Q(follow_ups__status="pending"), distinct=True),
         )
@@ -122,6 +126,32 @@ class AdminUserViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, viewset
                 entity=target,
                 summary=f"{'Reactivated' if active else 'Deactivated'} account {target.email}",
             )
+        return Response(self.get_serializer(self.get_queryset().get(pk=target.pk)).data)
+
+    @action(detail=True, methods=["post"], url_path="manager")
+    def set_manager(self, request, pk=None):
+        """Assign (or clear) this user's manager. Prevents self-management and loops."""
+        target = self.get_object()
+        manager_id = request.data.get("manager_id")
+        manager = None
+        if manager_id not in (None, ""):
+            manager = User.objects.filter(pk=manager_id, is_active=True).first()
+            if manager is None:
+                raise ValidationError({"manager_id": ["Choose an active user."]})
+            if manager.pk == target.pk:
+                raise ValidationError({"manager_id": ["A user cannot be their own manager."]})
+            cursor, seen = manager, set()
+            while cursor is not None and cursor.pk not in seen:
+                if cursor.pk == target.pk:
+                    raise ValidationError({"manager_id": ["That would create a loop: this user already manages them."]})
+                seen.add(cursor.pk)
+                cursor = cursor.manager
+        previous = target.manager
+        target.manager = manager
+        target.save(update_fields=["manager"])
+        record(user=request.user, action=AuditAction.SETTINGS_CHANGED, entity=target,
+               summary=f"Set manager of {target.email} to {manager.email if manager else 'nobody'}",
+               changes={"manager": [previous.email if previous else None, manager.email if manager else None]})
         return Response(self.get_serializer(self.get_queryset().get(pk=target.pk)).data)
 
     @action(detail=True, methods=["post"])

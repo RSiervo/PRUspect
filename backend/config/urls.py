@@ -5,6 +5,7 @@ from rest_framework.routers import DefaultRouter
 
 from apps.accounts import views as accounts
 from apps.accounts.admin_views import AdminUserViewSet
+from apps.accounts.team_views import TeamView
 from apps.activities import views as activities
 from apps.dashboard import views as dashboard
 from apps.notifications.views import NotificationViewSet
@@ -33,6 +34,7 @@ api_v1 = [
     path("auth/logout/", accounts.LogoutView.as_view(), name="auth-logout"),
     path("auth/me/", accounts.MeView.as_view(), name="auth-me"),
     path("auth/change-password/", accounts.ChangePasswordView.as_view(), name="auth-change-password"),
+    path("team/", TeamView.as_view(), name="team"),
     path("settings/", accounts.SettingsView.as_view(), name="settings"),
     path("settings/demo-data/", prospects.DemoDataView.as_view(), name="settings-demo-data"),
     path("settings/calendar-feed/", accounts.CalendarFeedSettingsView.as_view(), name="settings-calendar-feed"),

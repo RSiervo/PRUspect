@@ -32,7 +32,7 @@ export function AppLayout() {
   const location = useLocation()
   const badge = useFollowUpBadge()
   const { user } = useAuth()
-  const navItems = navItemsFor(Boolean(user?.is_staff))
+  const navItems = navItemsFor(Boolean(user?.is_staff), (user?.team_size ?? 0) > 0)
   // "More" lights up for sections that live in the drawer (Calendar, Reports, Settings…).
   const moreActive =
     location.pathname !== NEW_PROSPECT && ![...BOTTOM_LEFT, ...BOTTOM_RIGHT].some((item) => item.match(location.pathname))

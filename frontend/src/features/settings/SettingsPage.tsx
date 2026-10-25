@@ -71,6 +71,11 @@ function ProfileTab() {
           </div>
           <FormField label="Job title"><Input value={form.job_title} onChange={(e) => setForm({ ...form, job_title: e.target.value })} /></FormField>
           <div className="flex justify-end"><Button type="submit" loading={save.isPending}>Save profile</Button></div>
+          {user?.manager && (
+            <p className="rounded-xl bg-ink-50 p-3 text-xs leading-relaxed text-ink-600">
+              Your manager <strong>{user.manager.full_name}</strong> can see your totals (prospect counts, follow-ups, appointments, policies). They can’t see your prospects’ names or details.
+            </p>
+          )}
         </form>
       </Card>
       <Card>

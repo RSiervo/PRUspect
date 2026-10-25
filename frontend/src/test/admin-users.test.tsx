@@ -22,7 +22,7 @@ const { AdminUsersPage } = await import('@/features/admin/AdminUsersPage')
 const member: AdminUser = {
   id: 2, email: 'maria@gmail.com', full_name: 'Maria Santos', first_name: 'Maria', last_name: 'Santos', is_active: true,
   is_staff: false, is_superuser: false, date_joined: '2026-10-20T02:00:00Z', last_login: '2026-10-24T02:00:00Z',
-  sign_in_methods: ['google'], prospect_count: 12, open_follow_up_count: 3, is_self: false,
+  sign_in_methods: ['google'], prospect_count: 12, open_follow_up_count: 3, is_self: false, manager: null,
 }
 
 beforeEach(() => {
