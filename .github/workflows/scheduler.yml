@@ -1,0 +1,36 @@
+name: Scheduler and uptime check
+
+# Every 30 minutes: check that PRUspect is up, then generate reminders
+# (and phone notifications) for every user. A failed run emails the repo owner.
+#
+# Repository secrets needed (Settings -> Secrets and variables -> Actions):
+#   PRUSPECT_URL  e.g. https://pruspect.vercel.app
+#   CRON_SECRET   the same value as the CRON_SECRET env var on Vercel
+
+on:
+  schedule:
+    - cron: "*/30 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Health check
+        env:
+          PRUSPECT_URL: ${{ secrets.PRUSPECT_URL }}
+        run: |
+          if [ -z "$PRUSPECT_URL" ]; then echo "PRUSPECT_URL secret is not set"; exit 1; fi
+          curl --fail --silent --show-error --retry 3 --retry-delay 10 --max-time 30 "$PRUSPECT_URL/api/health/"
+      - name: Generate reminders
+        env:
+          PRUSPECT_URL: ${{ secrets.PRUSPECT_URL }}
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+        run: |
+          if [ -z "$CRON_SECRET" ]; then echo "CRON_SECRET secret is not set"; exit 1; fi
+          curl --fail --silent --show-error --retry 2 --retry-delay 15 --max-time 60 \
+            -X POST -H "Authorization: Bearer $CRON_SECRET" "$PRUSPECT_URL/api/v1/cron/run/"

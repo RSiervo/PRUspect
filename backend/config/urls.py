@@ -8,6 +8,8 @@ from apps.accounts.admin_views import AdminUserViewSet
 from apps.accounts.team_views import TeamView
 from apps.activities import views as activities
 from apps.dashboard import views as dashboard
+from apps.notifications import views as notification_views
+from apps.notifications.cron_views import CronRunView
 from apps.notifications.views import NotificationViewSet
 from apps.opportunities import views as opportunities
 from apps.prospects import views as prospects
@@ -55,6 +57,10 @@ api_v1 = [
     path("reports/pipeline/", reports.PipelineReportView.as_view(), name="report-pipeline"),
     path("reports/activity/", reports.ActivityReportView.as_view(), name="report-activity"),
     path("reports/export/", reports.ReportExportView.as_view(), name="report-export"),
+    path("push/config/", notification_views.PushConfigView.as_view(), name="push-config"),
+    path("push/subscribe/", notification_views.PushSubscribeView.as_view(), name="push-subscribe"),
+    path("push/test/", notification_views.PushTestView.as_view(), name="push-test"),
+    path("cron/run/", CronRunView.as_view(), name="cron-run"),
     path("", include(router.urls)),
 ]
 

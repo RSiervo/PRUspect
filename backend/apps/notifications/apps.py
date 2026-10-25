@@ -4,3 +4,6 @@ from django.apps import AppConfig
 class NotificationsConfig(AppConfig):
     name = "apps.notifications"
     label = "notifications"
+
+    def ready(self) -> None:
+        from . import signals  # noqa: F401

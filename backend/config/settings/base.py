@@ -161,6 +161,13 @@ GOOGLE_CLIENT_ID = env("GOOGLE_CLIENT_ID", "").strip()
 GOOGLE_SIGNUP_ENABLED = env_bool("GOOGLE_SIGNUP_ENABLED", True)
 GOOGLE_ALLOWED_DOMAINS = [d.lower().lstrip("@") for d in env_list("GOOGLE_ALLOWED_DOMAINS")]
 
+# Web Push (phone/desktop notifications). Generate a VAPID key pair once; see README.
+VAPID_PUBLIC_KEY = env("VAPID_PUBLIC_KEY", "").strip()
+VAPID_PRIVATE_KEY = env("VAPID_PRIVATE_KEY", "").strip()
+VAPID_SUBJECT = env("VAPID_SUBJECT", "mailto:admin@example.com").strip()
+# Shared secret for the scheduler endpoint (/api/v1/cron/run/).
+CRON_SECRET = env("CRON_SECRET", "").strip()
+
 CACHES = {"default": {"BACKEND": "django.core.cache.backends.locmem.LocMemCache"}}
 
 LOGGING = {

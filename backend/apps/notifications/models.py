@@ -42,3 +42,19 @@ class Notification(models.Model):
 
     def __str__(self) -> str:
         return self.title
+
+
+class PushSubscription(models.Model):
+    """A browser/device that agreed to receive push notifications."""
+
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="push_subscriptions")
+    endpoint = models.URLField(max_length=1000, unique=True)
+    p256dh = models.CharField(max_length=200)
+    auth = models.CharField(max_length=100)
+    user_agent = models.CharField(max_length=255, blank=True)
+    failures = models.PositiveIntegerField(default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
+    last_used_at = models.DateTimeField(null=True, blank=True)
+
+    def __str__(self) -> str:
+        return f"Push subscription {self.pk} for {self.user}"

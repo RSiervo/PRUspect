@@ -24,6 +24,7 @@ import { invalidateCrm, qk } from '@/lib/queryKeys'
 import { passwordSchema, setPasswordSchema, type PasswordValues } from '@/schemas'
 
 import { CalendarSyncCard } from './CalendarSyncCard'
+import { PushCard } from './PushCard'
 import { TemplatesTab } from './TemplatesTab'
 import { authService, prospectService, settingsService } from '@/services'
 import type { ProspectSource, UserSettings } from '@/types/api'
@@ -292,7 +293,7 @@ export function SettingsPage() {
           <TabsTrigger value="templates">Message templates</TabsTrigger>
           <TabsTrigger value="privacy">Data & privacy</TabsTrigger>
         </TabsList>
-        <TabsContent value="preferences" className="space-y-4"><PreferencesTab /><CalendarSyncCard /><InstallCard /></TabsContent>
+        <TabsContent value="preferences" className="space-y-4"><PreferencesTab /><PushCard /><CalendarSyncCard /><InstallCard /></TabsContent>
         <TabsContent value="profile"><ProfileTab /></TabsContent>
         <TabsContent value="sources"><ChoiceList kind="sources" /></TabsContent>
         <TabsContent value="categories"><ChoiceList kind="categories" /></TabsContent>
