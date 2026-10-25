@@ -277,6 +277,15 @@ export function OpportunitiesTab({ prospect }: { prospect: Prospect }) {
                       <dd className="tabular text-sm font-semibold text-emerald-900">{o.actual_annualized_premium ? formatMoney(o.actual_annualized_premium, o.currency) : 'Not yet recorded'}</dd>
                     </div>
                   )}
+                  {o.stage === 'issued' && (
+                    <div className="col-span-2 flex items-center justify-between gap-2">
+                      <div>
+                        <dt className="text-ink-400">Next premium ({o.premium_mode_label || 'mode not set'})</dt>
+                        <dd className="text-ink-800">{formatDate(o.next_premium_due_date)}</dd>
+                      </div>
+                      {o.premium_mode && o.next_premium_due_date && !prospect.is_archived && <PremiumPaidButton id={o.id} />}
+                    </div>
+                  )}
                   {o.estimated_close_date && o.stage !== 'issued' && (
                     <div className="col-span-2">
                       <dt className="text-ink-400">Estimated close</dt>
@@ -496,5 +505,21 @@ export function HistoryTab({ prospectId }: { prospectId: number }) {
         )}
       </Card>
     </div>
+  )
+}
+
+function PremiumPaidButton({ id }: { id: number }) {
+  const paid = useMutation({
+    mutationFn: () => opportunityService.premiumPaid(id),
+    onSuccess: (opp) => {
+      toast.success('Premium marked paid', { description: `Next due ${formatDate(opp.next_premium_due_date)}` })
+      invalidateCrm()
+    },
+    onError: (e) => toast.error(errorMessage(e)),
+  })
+  return (
+    <Button variant="secondary" size="sm" onClick={() => paid.mutate()} loading={paid.isPending}>
+      Mark paid
+    </Button>
   )
 }

@@ -57,4 +57,8 @@ def generate_for_user(user) -> int:
             body=f"{follow_up.get_activity_type_display()} with {follow_up.prospect.full_name} is past due.",
             link="/follow-ups?bucket=overdue",
         )
+
+    from apps.opportunities.clients import generate_client_notifications
+
+    created += generate_client_notifications(user)
     return created

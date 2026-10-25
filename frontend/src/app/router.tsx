@@ -10,6 +10,7 @@ import { LoginPage } from '@/features/auth/LoginPage'
 import { RequireAuth } from '@/features/auth/RequireAuth'
 import { SignupPage } from '@/features/auth/SignupPage'
 import { CalendarPage } from '@/features/calendar/CalendarPage'
+import { ClientsPage } from '@/features/clients/ClientsPage'
 import { DashboardPage } from '@/features/dashboard/DashboardPage'
 import { FollowUpsPage } from '@/features/follow-ups/FollowUpsPage'
 import { PipelinePage } from '@/features/pipeline/PipelinePage'
@@ -52,6 +53,7 @@ export const routes = [
           { path: 'prospects/import', element: <ImportPage /> },
           { path: 'prospects/:id', element: <ProspectDetailPage /> },
           { path: 'prospects/:id/edit', element: <ProspectFormPage /> },
+          { path: 'clients', element: <ClientsPage /> },
           { path: 'follow-ups', element: <FollowUpsPage /> },
           { path: 'calendar', element: <CalendarPage /> },
           { path: 'activities', element: <ActivitiesPage /> },

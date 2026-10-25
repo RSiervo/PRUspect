@@ -8,6 +8,7 @@ from django.db.models import Q
 class NotificationKind(models.TextChoices):
     REMINDER = "reminder", "Follow-up reminder"
     OVERDUE = "overdue", "Follow-up overdue"
+    CLIENT = "client", "Client reminder"
     SYSTEM = "system", "System"
 
 
@@ -20,6 +21,8 @@ class Notification(models.Model):
     follow_up = models.ForeignKey(
         "activities.FollowUp", on_delete=models.CASCADE, null=True, blank=True, related_name="notifications"
     )
+    # Prevents duplicate client reminders, e.g. "birthday:12:2026".
+    dedupe_key = models.CharField(max_length=80, blank=True)
     read_at = models.DateTimeField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True, db_index=True)
 
@@ -31,7 +34,10 @@ class Notification(models.Model):
                 fields=["follow_up", "kind"],
                 condition=Q(follow_up__isnull=False),
                 name="uniq_notification_per_followup_kind",
-            )
+            ),
+            models.UniqueConstraint(
+                fields=["user", "dedupe_key"], condition=~Q(dedupe_key=""), name="uniq_notification_dedupe_key"
+            ),
         ]
 
     def __str__(self) -> str:

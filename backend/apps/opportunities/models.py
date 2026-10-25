@@ -35,6 +35,15 @@ OPEN_STAGES = [
 ]
 SUBMITTED_STAGES = [OpportunityStage.APPLICATION_SUBMITTED, OpportunityStage.UNDERWRITING, OpportunityStage.ISSUED]
 
+class PremiumMode(models.TextChoices):
+    ANNUAL = "annual", "Annual"
+    SEMI_ANNUAL = "semi_annual", "Semi-annual"
+    QUARTERLY = "quarterly", "Quarterly"
+    MONTHLY = "monthly", "Monthly"
+
+
+PREMIUM_MODE_MONTHS = {PremiumMode.ANNUAL: 12, PremiumMode.SEMI_ANNUAL: 6, PremiumMode.QUARTERLY: 3, PremiumMode.MONTHLY: 1}
+
 _money = {"max_digits": 14, "decimal_places": 2, "validators": [MinValueValidator(Decimal("0"))]}
 
 
@@ -55,6 +64,9 @@ class InsuranceOpportunity(TimeStampedModel):
     application_submitted_date = models.DateField(null=True, blank=True)
     policy_issued_date = models.DateField(null=True, blank=True)
     actual_annualized_premium = models.DecimalField(null=True, blank=True, **_money)
+    # Client servicing (issued policies only).
+    premium_mode = models.CharField(max_length=16, choices=PremiumMode.choices, blank=True)
+    next_premium_due_date = models.DateField(null=True, blank=True)
     notes = models.TextField(blank=True)
 
     class Meta:

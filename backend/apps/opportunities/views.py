@@ -2,6 +2,9 @@ from django.db import transaction
 from django.db.models import Count, DecimalField, OuterRef, Q, Subquery, Sum, Value
 from django.db.models.functions import Coalesce
 from rest_framework import viewsets
+from rest_framework.decorators import action
+from rest_framework.exceptions import ValidationError
+from django.shortcuts import get_object_or_404
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
@@ -46,6 +49,21 @@ class OpportunityViewSet(viewsets.ModelViewSet):
         if changes:
             record(user=self.request.user, action=AuditAction.OPPORTUNITY_UPDATED, entity=opp,
                    prospect=opp.prospect, summary=f"Updated opportunity “{opp.name}”", changes=changes)
+
+    @action(detail=True, methods=["post"], url_path="premium-paid")
+    def premium_paid(self, request, pk=None):
+        """Advance the next premium due date by one premium period."""
+        from .clients import mark_premium_paid
+
+        opp = self.get_object()
+        if opp.stage != OpportunityStage.ISSUED:
+            raise ValidationError({"detail": ["Only issued policies have premiums."]})
+        previous = opp.next_premium_due_date
+        opp = mark_premium_paid(opp)
+        record(user=request.user, action=AuditAction.OPPORTUNITY_UPDATED, entity=opp, prospect=opp.prospect,
+               summary=f"Marked premium paid for “{opp.name}”",
+               changes={"next_premium_due_date": [str(previous), str(opp.next_premium_due_date)]})
+        return Response(self.get_serializer(opp).data)
 
     @transaction.atomic
     def perform_destroy(self, instance):
@@ -125,3 +143,37 @@ class PipelineView(APIView):
                 "issued_actual": "Sum of verified actual annualized premium for issued policies only.",
             },
         })
+
+
+class ClientsView(APIView):
+    """Clients (prospects with an issued policy) with servicing dates."""
+
+    def get(self, request):
+        from .clients import clients_list
+
+        return Response({"results": clients_list(request.user, request.query_params.get("search", "").strip())})
+
+
+class ClientsUpcomingView(APIView):
+    """Birthdays, anniversaries, premium due dates and referral asks in the next N days."""
+
+    def get(self, request):
+        from .clients import upcoming_events
+
+        try:
+            days = max(1, min(int(request.query_params.get("days", 30)), 120))
+        except ValueError:
+            days = 30
+        return Response({"days": days, "events": upcoming_events(request.user, days)})
+
+
+class ReferralAskedView(APIView):
+    def post(self, request, prospect_id):
+        from django.utils import timezone
+
+        prospect = get_object_or_404(Prospect, owner=request.user, pk=prospect_id)
+        prospect.referral_asked_at = timezone.now()
+        prospect.save(update_fields=["referral_asked_at", "updated_at"])
+        record(user=request.user, action=AuditAction.PROSPECT_UPDATED, entity=prospect, prospect=prospect,
+               summary=f"Asked {prospect.full_name} for referrals")
+        return Response({"referral_asked_at": prospect.referral_asked_at})

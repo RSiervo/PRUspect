@@ -90,7 +90,7 @@ class ProspectDetailSerializer(ProspectListSerializer):
             "source_id", "birth_date", "referral_name", "existing_coverage", "budget_range", "budget_range_label",
             "notes", "consent_obtained", "consent_date", "consent_source", "preferred_contact_method",
             "preferred_contact_method_label", "status_changed_at", "qualified_at", "application_submitted_at",
-            "policy_issued_at", "archived_at", "updated_at",
+            "policy_issued_at", "referral_asked_at", "archived_at", "updated_at",
         ]
         read_only_fields = fields
 

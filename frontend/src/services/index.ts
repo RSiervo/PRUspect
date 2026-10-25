@@ -8,6 +8,8 @@ import type {
   AuthConfig,
   AuthResponse,
   CalendarEvent,
+  ClientEvent,
+  ClientRow,
   ConversionData,
   DashboardSummary,
   DuplicateMatch,
@@ -153,6 +155,13 @@ export const opportunityService = {
   create: (data: OpportunityWrite) => api.post<Opportunity>('/opportunities/', data),
   update: (id: number, data: Partial<OpportunityWrite>) => api.patch<Opportunity>(`/opportunities/${id}/`, data),
   remove: (id: number) => api.delete(`/opportunities/${id}/`),
+  premiumPaid: (id: number) => api.post<Opportunity>(`/opportunities/${id}/premium-paid/`),
+}
+
+export const clientService = {
+  list: (search = '') => api.get<{ results: ClientRow[] }>('/clients/', { search }),
+  upcoming: (days: number) => api.get<{ days: number; events: ClientEvent[] }>('/clients/upcoming/', { days }),
+  referralAsked: (prospectId: number) => api.post<{ referral_asked_at: string }>(`/clients/${prospectId}/referral-asked/`),
 }
 
 export const pipelineService = {

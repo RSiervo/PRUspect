@@ -351,6 +351,9 @@ export interface Opportunity {
   application_submitted_date: string | null
   policy_issued_date: string | null
   actual_annualized_premium: string | null
+  premium_mode: '' | 'annual' | 'semi_annual' | 'quarterly' | 'monthly'
+  premium_mode_label: string
+  next_premium_due_date: string | null
   notes: string
   created_at: string
   updated_at: string
@@ -368,6 +371,8 @@ export interface OpportunityWrite {
   application_submitted_date?: string | null
   policy_issued_date?: string | null
   actual_annualized_premium?: string | null
+  premium_mode?: string
+  next_premium_due_date?: string | null
   notes?: string
 }
 
@@ -654,4 +659,35 @@ export interface ImportResult {
   created: number
   skipped_duplicates: number
   invalid: number
+}
+
+export interface ClientPerson {
+  id: number
+  full_name: string
+  first_name: string
+  last_name: string
+  preferred_name: string
+  mobile: string
+  email: string
+}
+
+export interface ClientRow extends ClientPerson {
+  policies: number
+  annualized_premium: string
+  next_premium_due_date: string | null
+  client_since: string | null
+  next_birthday: string | null
+  referral_asked_at: string | null
+}
+
+export type ClientEventType = 'birthday' | 'anniversary' | 'premium_due' | 'referral_ask'
+
+export interface ClientEvent {
+  type: ClientEventType
+  date: string
+  days_until: number
+  prospect: ClientPerson
+  opportunity?: { id: number; name: string }
+  detail: string
+  overdue?: boolean
 }

@@ -18,6 +18,7 @@ class OpportunitySerializer(serializers.ModelSerializer):
     product_category_name = serializers.CharField(source="product_category.name", read_only=True, default="")
     stage_label = serializers.CharField(source="get_stage_display", read_only=True)
     estimated_monthly_premium = serializers.DecimalField(max_digits=14, decimal_places=2, read_only=True)
+    premium_mode_label = serializers.CharField(source="get_premium_mode_display", read_only=True)
 
     class Meta:
         model = InsuranceOpportunity
@@ -25,7 +26,8 @@ class OpportunitySerializer(serializers.ModelSerializer):
             "id", "prospect", "prospect_detail", "name", "product_category", "product_category_name",
             "estimated_annual_premium", "estimated_monthly_premium", "currency", "estimated_close_date", "stage",
             "stage_label", "application_reference", "application_submitted_date", "policy_issued_date",
-            "actual_annualized_premium", "notes", "created_at", "updated_at",
+            "actual_annualized_premium", "premium_mode", "premium_mode_label", "next_premium_due_date", "notes",
+            "created_at", "updated_at",
         ]
 
     def validate_prospect(self, prospect):
@@ -66,6 +68,9 @@ class OpportunitySerializer(serializers.ModelSerializer):
                 errors["actual_annualized_premium"] = ["Actual premium can only be recorded once the policy is issued."]
             attrs["actual_annualized_premium"] = None
             attrs["policy_issued_date"] = None
+            # Premium schedule only applies to issued policies.
+            attrs["premium_mode"] = ""
+            attrs["next_premium_due_date"] = None
         if errors:
             raise serializers.ValidationError(errors)
         return attrs

@@ -54,7 +54,7 @@ describe('opportunity validation', () => {
   const opp: OpportunityFormValues = {
     name: 'Family plan', product_category: '', estimated_annual_premium: '36000', currency: 'PHP',
     estimated_close_date: '', stage: 'identified', application_reference: '', application_submitted_date: '',
-    policy_issued_date: '', actual_annualized_premium: '', notes: '', also_mark_won: false,
+    policy_issued_date: '', actual_annualized_premium: '', notes: '', premium_mode: '', next_premium_due_date: '', also_mark_won: false,
   }
 
   it('accepts an open opportunity with an estimate', () => {

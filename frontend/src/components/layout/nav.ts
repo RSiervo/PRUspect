@@ -2,6 +2,7 @@ import {
   BarChart3,
   CalendarDays,
   ClipboardCheck,
+  HeartHandshake,
   History,
   LayoutDashboard,
   Settings,
@@ -24,6 +25,7 @@ export interface NavItem {
 export const NAV_ITEMS: NavItem[] = [
   { to: '/', label: 'Dashboard', icon: LayoutDashboard, end: true },
   { to: '/prospects', label: 'Prospects', icon: Users },
+  { to: '/clients', label: 'Clients', icon: HeartHandshake },
   { to: '/follow-ups', label: 'Follow-ups', icon: ClipboardCheck, badge: 'follow-ups' },
   { to: '/calendar', label: 'Calendar', icon: CalendarDays },
   { to: '/activities', label: 'Activities', icon: History },

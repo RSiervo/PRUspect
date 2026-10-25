@@ -48,6 +48,8 @@ export function OpportunityDialog({
     policy_issued_date: opportunity?.policy_issued_date ?? '',
     actual_annualized_premium: opportunity?.actual_annualized_premium ?? '',
     notes: opportunity?.notes ?? '',
+    premium_mode: opportunity?.premium_mode ?? '',
+    next_premium_due_date: opportunity?.next_premium_due_date ?? '',
     also_mark_won: false,
   })
   const { register, handleSubmit, control, reset, setError, formState: { errors } } = useForm<OpportunityFormValues>({
@@ -78,6 +80,8 @@ export function OpportunityDialog({
         application_submitted_date: submitted ? values.application_submitted_date || null : values.application_submitted_date || null,
         policy_issued_date: issued ? values.policy_issued_date || null : null,
         actual_annualized_premium: issued ? clean(values.actual_annualized_premium) : null,
+        premium_mode: issued ? values.premium_mode : '',
+        next_premium_due_date: issued ? values.next_premium_due_date || null : null,
         notes: values.notes,
       }
       const saved = opportunity ? await opportunityService.update(opportunity.id, payload) : await opportunityService.create(payload)
@@ -158,6 +162,18 @@ export function OpportunityDialog({
               </FormField>
               <FormField label="Actual annualized premium" optional error={errors.actual_annualized_premium?.message} hint="Enter only once verified from the issued policy.">
                 <Input inputMode="decimal" {...register('actual_annualized_premium')} />
+              </FormField>
+              <FormField label="Premium mode" optional hint="Used for premium due reminders.">
+                <Select {...register('premium_mode')}>
+                  <option value="">Not set</option>
+                  <option value="annual">Annual</option>
+                  <option value="semi_annual">Semi-annual</option>
+                  <option value="quarterly">Quarterly</option>
+                  <option value="monthly">Monthly</option>
+                </Select>
+              </FormField>
+              <FormField label="Next premium due" optional>
+                <Input type="date" {...register('next_premium_due_date')} />
               </FormField>
               {prospectStatus !== 'won' && (
                 <label className="sm:col-span-2 flex items-start gap-3 rounded-xl bg-emerald-50 p-3 text-sm text-emerald-900">

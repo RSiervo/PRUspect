@@ -50,6 +50,11 @@ DEFAULT_MESSAGE_TEMPLATES = [
     ("Checking in", "any", "",
      "Hi {preferred_name}, hope you're well! Just checking in — let me know if you'd like to continue our "
      "conversation about your plans. — {advisor_name}"),
+    ("Birthday greeting", "any", "",
+     "Happy birthday, {preferred_name}! Wishing you good health and a wonderful year ahead. — {advisor_name}"),
+    ("Premium reminder", "any", "",
+     "Hi {preferred_name}, a friendly reminder that your policy premium is coming up soon. Let me know if you need "
+     "any help. — {advisor_name}"),
     ("Referral thank-you", "any", "",
      "Hi {preferred_name}, thank you for trusting me. If you know anyone who might benefit from a quick review of "
      "their protection, I'd be grateful for an introduction. — {advisor_name}"),

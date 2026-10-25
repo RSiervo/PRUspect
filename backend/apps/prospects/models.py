@@ -113,6 +113,8 @@ class Prospect(TimeStampedModel):
     qualified_at = models.DateTimeField(null=True, blank=True)
     application_submitted_at = models.DateTimeField(null=True, blank=True)
     policy_issued_at = models.DateTimeField(null=True, blank=True)
+    # Clients: when the advisor last asked this client for referrals.
+    referral_asked_at = models.DateTimeField(null=True, blank=True)
 
     is_archived = models.BooleanField(default=False)
     archived_at = models.DateTimeField(null=True, blank=True)

@@ -147,6 +147,8 @@ export const opportunitySchema = z
     policy_issued_date: z.string(),
     actual_annualized_premium: money,
     notes: optionalText(5000),
+    premium_mode: z.string(),
+    next_premium_due_date: z.string(),
     also_mark_won: z.boolean(),
   })
   .superRefine((v, ctx) => {
