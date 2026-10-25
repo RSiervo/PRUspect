@@ -104,14 +104,14 @@ export function ProspectDetailPage() {
       )}
 
       <section className="card mb-5 overflow-hidden">
-        <div className="h-20 bg-gradient-to-r from-brand-600 via-brand-500 to-brand-700 sm:h-24" aria-hidden />
+        <div className="h-12 bg-gradient-to-r from-brand-600 to-brand-800 sm:h-14" aria-hidden />
         <div className="px-5 pb-5 sm:px-6">
-          <div className="-mt-8 flex flex-col gap-4 sm:-mt-9 sm:flex-row sm:items-end sm:justify-between">
-            <div className="flex items-end gap-4">
-              <Avatar name={prospect.full_name} className="size-20 border-4 border-white text-xl shadow-sm sm:size-24" />
-              <div className="min-w-0 pb-1">
-                <h1 className="truncate text-xl font-bold text-ink-900 sm:text-2xl">{prospect.full_name}</h1>
-                <p className="truncate text-sm text-ink-500">
+          <div className="-mt-6 flex flex-col gap-4 sm:-mt-7 sm:flex-row sm:items-end sm:justify-between">
+            <div className="flex items-start gap-4">
+              <Avatar name={prospect.full_name} className="size-16 border-4 border-white text-lg shadow-sm sm:size-[72px]" />
+              <div className="min-w-0 pt-8 sm:pt-9">
+                <h1 className="truncate text-lg font-semibold text-ink-900 sm:text-xl">{prospect.full_name}</h1>
+                <p className="truncate text-[13px] text-ink-500">
                   {[prospect.occupation, prospect.company].filter(Boolean).join(' · ') || 'No occupation recorded'}
                 </p>
               </div>

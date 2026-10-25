@@ -48,13 +48,13 @@ export function DashboardPage() {
       : null
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-ink-900 sm:text-[26px]">
+          <h1 className="text-xl font-semibold tracking-tight text-ink-900 sm:text-[22px]">
             {greeting()}, {user?.first_name || 'there'}! <span aria-hidden>👋</span>
           </h1>
-          <p className="mt-1 text-sm text-ink-500">
+          <p className="mt-0.5 text-[13px] text-ink-500">
             Here’s your prospect activity at a glance · {formatDate(nowInZone().toISOString(), 'EEEE, MMM d, yyyy')}
           </p>
         </div>

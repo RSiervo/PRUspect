@@ -36,13 +36,13 @@ export function KpiCard({ label, value, hint, icon: Icon, tone = 'blue', to, def
   const body = (
     <>
       <div className="flex items-start justify-between gap-2">
-        <div className={cn('grid size-10 shrink-0 place-items-center rounded-full', tones[tone])}>
-          <Icon className="size-5" aria-hidden />
+        <div className={cn('grid size-8 shrink-0 place-items-center rounded-lg', tones[tone])}>
+          <Icon className="size-4" aria-hidden />
         </div>
         {to && <ArrowUpRight className="size-4 text-ink-300 transition group-hover:text-brand-600" aria-hidden />}
       </div>
-      <div className="mt-3 flex items-center gap-1.5">
-        <p className="text-[13px] text-ink-500">{label}</p>
+      <div className="mt-2.5 flex items-center gap-1.5">
+        <p className="text-[12.5px] text-ink-500">{label}</p>
         {definition && (
           <Tooltip content={definition}>
             <button type="button" className="text-ink-300 hover:text-ink-500" aria-label={`How ${label} is calculated`} onClick={(e) => e.preventDefault()}>
@@ -54,13 +54,13 @@ export function KpiCard({ label, value, hint, icon: Icon, tone = 'blue', to, def
       {loading ? (
         <Skeleton className="mt-2 h-7 w-16" />
       ) : (
-        <p className="tabular mt-1 text-2xl font-semibold tracking-tight text-ink-900">{value}</p>
+        <p className="tabular mt-0.5 text-[22px] leading-tight font-semibold tracking-tight text-ink-900">{value}</p>
       )}
       {hint && !loading && <p className="mt-1 truncate text-xs text-ink-500">{hint}</p>}
     </>
   )
   const className =
-    'card group block h-full p-4 transition-[box-shadow,transform] duration-200 hover:-translate-y-0.5 hover:shadow-[var(--shadow-pop)] sm:p-5'
+    'card group block h-full p-4 transition-[border-color,box-shadow] duration-200 hover:border-ink-200 hover:shadow-sm'
   return (
     <motion.div
       initial={reduce ? false : { opacity: 0, y: 8 }}

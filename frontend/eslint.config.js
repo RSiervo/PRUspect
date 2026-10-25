@@ -24,6 +24,7 @@ export default tseslint.config(
       'src/components/ui/**/*.tsx',
       'src/features/auth/AuthProvider.tsx',
       'src/features/auth/GoogleButton.tsx',
+      'src/components/forms/FilterToggle.tsx',
       'src/app/router.tsx',
       'src/components/layout/Sidebar.tsx',
       'src/features/follow-ups/FollowUpItem.tsx',

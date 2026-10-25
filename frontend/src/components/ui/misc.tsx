@@ -20,9 +20,9 @@ export function CardHeader({
   className?: string
 }) {
   return (
-    <div className={cn('flex items-start justify-between gap-3 px-5 pt-5', className)}>
+    <div className={cn('flex items-start justify-between gap-3 px-4 pt-4 sm:px-5', className)}>
       <div className="min-w-0">
-        <h2 className="text-[15px] font-semibold text-ink-900">{title}</h2>
+        <h2 className="text-sm font-semibold text-ink-900">{title}</h2>
         {description && <p className="mt-0.5 text-xs text-ink-500">{description}</p>}
       </div>
       {action && <div className="shrink-0">{action}</div>}
@@ -100,7 +100,7 @@ export function TabsTrigger({ className, ...props }: React.ComponentPropsWithout
   return (
     <T.Trigger
       className={cn(
-        'relative -mb-px shrink-0 border-b-2 border-transparent px-3 py-2.5 text-sm font-medium text-ink-500 transition-colors hover:text-ink-800 data-[state=active]:border-brand-600 data-[state=active]:text-brand-700',
+        'relative -mb-px shrink-0 border-b-2 border-transparent px-3 py-2 text-[13px] font-medium text-ink-500 transition-colors hover:text-ink-800 data-[state=active]:border-brand-600 data-[state=active]:text-brand-700',
         className,
       )}
       {...props}

@@ -4,11 +4,11 @@ import * as React from 'react'
 import { cn } from '@/lib/utils'
 
 const fieldBase =
-  'w-full rounded-xl border border-line bg-white px-3.5 text-sm text-ink-900 shadow-xs transition-[border-color,box-shadow] placeholder:text-ink-400 hover:border-ink-300 focus:border-brand-400 focus:outline-none focus:ring-4 focus:ring-brand-100 disabled:cursor-not-allowed disabled:bg-ink-50 disabled:text-ink-500 aria-[invalid=true]:border-brand-500 aria-[invalid=true]:ring-brand-100'
+  'w-full rounded-lg border border-line bg-white px-3 text-[13px] text-ink-900 shadow-xs transition-[border-color,box-shadow] placeholder:text-ink-400 hover:border-ink-300 focus:border-brand-400 focus:outline-none focus:ring-4 focus:ring-brand-100 disabled:cursor-not-allowed disabled:bg-ink-50 disabled:text-ink-500 aria-[invalid=true]:border-brand-500 aria-[invalid=true]:ring-brand-100'
 
 export const Input = React.forwardRef<HTMLInputElement, React.InputHTMLAttributes<HTMLInputElement>>(
   ({ className, type = 'text', ...props }, ref) => (
-    <input ref={ref} type={type} className={cn(fieldBase, 'h-10', className)} {...props} />
+    <input ref={ref} type={type} className={cn(fieldBase, 'h-10 md:h-9', className)} {...props} />
   ),
 )
 Input.displayName = 'Input'
@@ -24,7 +24,7 @@ Textarea.displayName = 'Textarea'
 export const Select = React.forwardRef<HTMLSelectElement, React.SelectHTMLAttributes<HTMLSelectElement>>(
   ({ className, children, ...props }, ref) => (
     <div className="relative">
-      <select ref={ref} className={cn(fieldBase, 'h-10 appearance-none pr-9', className)} {...props}>
+      <select ref={ref} className={cn(fieldBase, 'h-10 appearance-none pr-9 md:h-9', className)} {...props}>
         {children}
       </select>
       <ChevronDown
@@ -37,5 +37,5 @@ export const Select = React.forwardRef<HTMLSelectElement, React.SelectHTMLAttrib
 Select.displayName = 'Select'
 
 export function Label({ className, ...props }: React.LabelHTMLAttributes<HTMLLabelElement>) {
-  return <label className={cn('text-[13px] font-medium text-ink-700', className)} {...props} />
+  return <label className={cn('text-[12.5px] font-medium text-ink-700', className)} {...props} />
 }

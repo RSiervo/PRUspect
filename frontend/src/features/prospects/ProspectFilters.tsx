@@ -1,6 +1,7 @@
 import { Filter, LayoutGrid, Rows3, Search, X } from 'lucide-react'
 import { useEffect, useState } from 'react'
 
+import { FilterPanel, FilterToggleButton, useFilterToggle } from '@/components/forms/FilterToggle'
 import { Button } from '@/components/ui/button'
 import { Input, Label, Select } from '@/components/ui/input'
 import { DropdownMenu, DropdownMenuCheckItem, DropdownMenuContent, DropdownMenuTrigger, Popover, PopoverContent, PopoverTrigger } from '@/components/ui/menu'
@@ -107,14 +108,15 @@ export function ProspectFilters({
   }, [debounced])
   useEffect(() => setTerm(filters.search), [filters.search])
 
+  const panel = useFilterToggle()
   const activeCount = ['status', 'priority', 'source', 'interest', 'created_from', 'created_to', 'milestone'].filter(
     (k) => filters[k as keyof FilterState],
   ).length
 
   return (
-    <div className="flex flex-col gap-3 border-b border-line p-4 sm:px-5">
-      <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-        <div className="relative flex-1">
+    <div className="flex flex-col gap-3 border-b border-line p-3 sm:px-4">
+      <div className="flex items-center gap-2">
+        <div className="relative min-w-0 flex-1">
           <Search className="pointer-events-none absolute top-1/2 left-3.5 size-4 -translate-y-1/2 text-ink-400" aria-hidden />
           <Input value={term} onChange={(e) => setTerm(e.target.value)} placeholder="Search name, mobile, email or company" aria-label="Search prospects" className="pl-10" />
           {term && (
@@ -123,15 +125,16 @@ export function ProspectFilters({
             </button>
           )}
         </div>
-        <div className="flex items-center gap-2">
-          <Select value={filters.ordering} onChange={(e) => update({ ordering: e.target.value })} aria-label="Sort by" className="h-10 w-full sm:w-52">
+        <FilterToggleButton open={panel.open} onToggle={panel.toggle} activeCount={activeCount} controls="prospect-filters" />
+        <div className="hidden items-center gap-2 md:flex">
+          <Select value={filters.ordering} onChange={(e) => update({ ordering: e.target.value })} aria-label="Sort by" className="w-52">
             {SORTS.map((s) => (
               <option key={s.value} value={s.value}>
                 {s.label}
               </option>
             ))}
           </Select>
-          <div className="hidden rounded-xl border border-line bg-white p-0.5 md:flex" role="radiogroup" aria-label="View">
+          <div className="flex rounded-lg border border-line bg-white p-0.5" role="radiogroup" aria-label="View">
             {(['table', 'cards'] as const).map((v) => (
               <button
                 key={v}
@@ -140,7 +143,7 @@ export function ProspectFilters({
                 aria-checked={view === v}
                 aria-label={v === 'table' ? 'Table view' : 'Card view'}
                 onClick={() => onViewChange(v)}
-                className={cn('grid size-8 place-items-center rounded-lg text-ink-500', view === v && 'bg-brand-50 text-brand-700')}
+                className={cn('grid size-7 place-items-center rounded-md text-ink-500', view === v && 'bg-brand-50 text-brand-700')}
               >
                 {v === 'table' ? <Rows3 className="size-4" /> : <LayoutGrid className="size-4" />}
               </button>
@@ -149,8 +152,17 @@ export function ProspectFilters({
         </div>
       </div>
 
-      <div className="flex flex-wrap items-center gap-2">
-        <Filter className="size-4 text-ink-400" aria-hidden />
+      <FilterPanel id="prospect-filters" open={panel.open} className="flex-wrap items-center gap-2">
+        <div className="w-full md:hidden">
+          <Select value={filters.ordering} onChange={(e) => update({ ordering: e.target.value })} aria-label="Sort by">
+            {SORTS.map((s) => (
+              <option key={s.value} value={s.value}>
+                {s.label}
+              </option>
+            ))}
+          </Select>
+        </div>
+        <Filter className="hidden size-4 text-ink-400 md:block" aria-hidden />
         <MultiFilter
           label="Status"
           value={filters.status}
@@ -197,7 +209,7 @@ export function ProspectFilters({
             <X /> Clear filters
           </Button>
         )}
-      </div>
+      </FilterPanel>
     </div>
   )
 }

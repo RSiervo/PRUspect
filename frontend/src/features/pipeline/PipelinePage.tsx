@@ -7,6 +7,7 @@ import { toast } from 'sonner'
 
 import { DemoBadge, PriorityBadge } from '@/components/data-display/badges'
 import { ErrorState } from '@/components/data-display/states'
+import { FilterPanel, FilterToggleButton, useFilterToggle } from '@/components/forms/FilterToggle'
 import { PageHeader } from '@/components/layout/PageHeader'
 import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 import { Input, Select } from '@/components/ui/input'
@@ -127,6 +128,7 @@ export function PipelinePage() {
   const [activeCard, setActiveCard] = useState<PipelineCard | null>(null)
   const [pending, setPending] = useState<{ card: PipelineCard; to: ProspectStatus } | null>(null)
   const [reason, setReason] = useState('')
+  const panel = useFilterToggle()
 
   const params = { search, priority }
   const { data, isLoading, error, refetch } = useQuery({ queryKey: [...qk.pipeline, params], queryFn: () => pipelineService.board(params) })
@@ -192,21 +194,26 @@ export function PipelinePage() {
         </div>
       </div>
 
-      <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center">
-        <div className="relative flex-1 sm:max-w-sm">
-          <Search className="pointer-events-none absolute top-1/2 left-3.5 size-4 -translate-y-1/2 text-ink-400" aria-hidden />
-          <Input value={term} onChange={(e) => setTerm(e.target.value)} placeholder="Filter by name" className="pl-10" aria-label="Filter pipeline" />
+      <div className="mb-4 flex flex-col gap-2 md:flex-row md:items-center">
+        <div className="flex items-center gap-2 md:max-w-sm md:flex-1">
+            <div className="relative min-w-0 flex-1">
+              <Search className="pointer-events-none absolute top-1/2 left-3.5 size-4 -translate-y-1/2 text-ink-400" aria-hidden />
+              <Input value={term} onChange={(e) => setTerm(e.target.value)} placeholder="Filter by name" className="pl-10" aria-label="Filter pipeline" />
+            </div>
+          <FilterToggleButton open={panel.open} onToggle={panel.toggle} activeCount={[priority, showClosed ? 'closed' : ''].filter(Boolean).length} controls="pipeline-filters" />
         </div>
-        <Select value={priority} onChange={(e) => setPriority(e.target.value)} className="sm:w-44" aria-label="Priority">
+        <FilterPanel id="pipeline-filters" open={panel.open} className="flex-col gap-2 md:flex-1 md:flex-row md:items-center">
+        <div className="md:w-44"><Select value={priority} onChange={(e) => setPriority(e.target.value)} aria-label="Priority">
           <option value="">All priorities</option>
           {PRIORITIES.map((p) => (
             <option key={p} value={p}>{PRIORITY_META[p].label}</option>
           ))}
-        </Select>
-        <label className="flex items-center gap-2 text-sm text-ink-700 sm:ml-auto">
+        </Select></div>
+        <label className="flex items-center gap-2 text-[13px] text-ink-700 md:ml-auto">
           <Switch checked={showClosed} onCheckedChange={setShowClosed} aria-label="Show closed and paused stages" />
           Show closed &amp; on-hold stages
         </label>
+        </FilterPanel>
       </div>
 
       {error ? (
@@ -223,7 +230,7 @@ export function PipelinePage() {
           onDragEnd={onDragEnd}
           accessibility={{ screenReaderInstructions: { draggable: 'Drag with a mouse, or use the move button on each card to change its stage.' } }}
         >
-          <div className="relative -mx-4 flex snap-x gap-3 overflow-x-auto px-4 pb-4 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8">
+          <div className="relative -mx-4 flex snap-x gap-3 overflow-x-auto px-4 pb-4 sm:-mx-6 sm:px-6 lg:-mx-7 lg:px-7">
             {stages.map((stage) => (
               <Column key={stage.value} stage={stage} onMoved={() => void refetch()} />
             ))}

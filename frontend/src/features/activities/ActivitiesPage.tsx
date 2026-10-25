@@ -5,6 +5,7 @@ import { Link } from 'react-router'
 
 import { Pagination, Timeline, type TimelineItem } from '@/components/data-display/common'
 import { EmptyState, ErrorState, ListSkeleton } from '@/components/data-display/states'
+import { FilterPanel, FilterToggleButton, useFilterToggle } from '@/components/forms/FilterToggle'
 import { PageHeader } from '@/components/layout/PageHeader'
 import { Button } from '@/components/ui/button'
 import { Input, Select } from '@/components/ui/input'
@@ -23,6 +24,7 @@ export function ActivitiesPage() {
   const [term, setTerm] = useState(filters.search)
   const debounced = useDebouncedValue(term, 300)
   const { logActivity } = useQuickActions()
+  const panel = useFilterToggle()
 
   useEffect(() => {
     if (debounced !== filters.search) update({ search: debounced })
@@ -65,19 +67,26 @@ export function ActivitiesPage() {
         }
       />
       <div className="card overflow-hidden">
-        <div className="grid grid-cols-1 gap-2 border-b border-line p-4 sm:grid-cols-[1fr_200px_160px_160px] sm:px-5">
-          <div className="relative">
-            <Search className="pointer-events-none absolute top-1/2 left-3.5 size-4 -translate-y-1/2 text-ink-400" aria-hidden />
-            <Input value={term} onChange={(e) => setTerm(e.target.value)} placeholder="Search subject or prospect" className="pl-10" aria-label="Search activities" />
+        <div className="flex flex-col gap-2 border-b border-line p-3 sm:px-4 md:flex-row md:items-center">
+          <div className="flex items-center gap-2 md:flex-1">
+            <div className="relative min-w-0 flex-1">
+              <Search className="pointer-events-none absolute top-1/2 left-3.5 size-4 -translate-y-1/2 text-ink-400" aria-hidden />
+              <Input value={term} onChange={(e) => setTerm(e.target.value)} placeholder="Search subject or prospect" className="pl-10" aria-label="Search activities" />
+            </div>
+            <FilterToggleButton open={panel.open} onToggle={panel.toggle} activeCount={[filters.activity_type, filters.date_from, filters.date_to].filter(Boolean).length} controls="activity-filters" />
           </div>
-          <Select value={filters.activity_type} onChange={(e) => update({ activity_type: e.target.value })} aria-label="Type">
+          <FilterPanel id="activity-filters" open={panel.open} className="flex-col gap-2 md:flex-row">
+          <div className="md:w-48"><Select value={filters.activity_type} onChange={(e) => update({ activity_type: e.target.value })} aria-label="Type">
             <option value="">All types</option>
             {ACTIVITY_TYPES.map((t) => (
               <option key={t} value={t}>{ACTIVITY_META[t].label}</option>
             ))}
-          </Select>
+          </Select></div>
+          <div className="grid grid-cols-2 gap-2 md:flex">
           <Input type="date" value={filters.date_from} onChange={(e) => update({ date_from: e.target.value })} aria-label="From date" />
           <Input type="date" value={filters.date_to} min={filters.date_from || undefined} onChange={(e) => update({ date_to: e.target.value })} aria-label="To date" />
+          </div>
+          </FilterPanel>
         </div>
         {error ? (
           <ErrorState error={error} onRetry={refetch} />

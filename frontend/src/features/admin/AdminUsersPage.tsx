@@ -5,6 +5,7 @@ import { toast } from 'sonner'
 
 import { Avatar, Pagination } from '@/components/data-display/common'
 import { EmptyState, ErrorState, ListSkeleton } from '@/components/data-display/states'
+import { FilterPanel, FilterToggleButton, useFilterToggle } from '@/components/forms/FilterToggle'
 import { PageHeader } from '@/components/layout/PageHeader'
 import { Button } from '@/components/ui/button'
 import { ConfirmDialog } from '@/components/ui/confirm-dialog'
@@ -63,6 +64,7 @@ export function AdminUsersPage() {
   const [term, setTerm] = useState(filters.search)
   const debounced = useDebouncedValue(term, 300)
   const [target, setTarget] = useState<AdminUser | null>(null)
+  const panel = useFilterToggle()
 
   useEffect(() => {
     if (debounced !== filters.search) update({ search: debounced })
@@ -123,28 +125,33 @@ export function AdminUsersPage() {
       </div>
 
       <div className="card overflow-hidden">
-        <div className="grid grid-cols-1 gap-2 border-b border-line p-4 sm:grid-cols-[1fr_160px_170px_190px] sm:px-5">
-          <div className="relative">
-            <Search className="pointer-events-none absolute top-1/2 left-3.5 size-4 -translate-y-1/2 text-ink-400" aria-hidden />
-            <Input value={term} onChange={(e) => setTerm(e.target.value)} placeholder="Search name or email" className="pl-10" aria-label="Search users" />
+        <div className="flex flex-col gap-2 border-b border-line p-3 sm:px-4 md:flex-row md:items-center">
+          <div className="flex items-center gap-2 md:flex-1">
+            <div className="relative min-w-0 flex-1">
+              <Search className="pointer-events-none absolute top-1/2 left-3.5 size-4 -translate-y-1/2 text-ink-400" aria-hidden />
+              <Input value={term} onChange={(e) => setTerm(e.target.value)} placeholder="Search name or email" className="pl-10" aria-label="Search users" />
+            </div>
+            <FilterToggleButton open={panel.open} onToggle={panel.toggle} activeCount={[filters.status, filters.method].filter(Boolean).length} controls="user-filters" />
           </div>
-          <Select value={filters.status} onChange={(e) => update({ status: e.target.value })} aria-label="Status">
+          <FilterPanel id="user-filters" open={panel.open} className="flex-col gap-2 md:flex-row">
+          <div className="md:w-40"><Select value={filters.status} onChange={(e) => update({ status: e.target.value })} aria-label="Status">
             <option value="">All statuses</option>
             <option value="active">Active</option>
             <option value="inactive">Deactivated</option>
-          </Select>
-          <Select value={filters.method} onChange={(e) => update({ method: e.target.value })} aria-label="Sign-in method">
+          </Select></div>
+          <div className="md:w-44"><Select value={filters.method} onChange={(e) => update({ method: e.target.value })} aria-label="Sign-in method">
             <option value="">All sign-in methods</option>
             <option value="google">Google</option>
             <option value="password">Password only</option>
-          </Select>
-          <Select value={filters.ordering} onChange={(e) => update({ ordering: e.target.value })} aria-label="Sort by">
+          </Select></div>
+          <div className="md:w-48"><Select value={filters.ordering} onChange={(e) => update({ ordering: e.target.value })} aria-label="Sort by">
             <option value="joined">Newest accounts</option>
             <option value="-joined">Oldest accounts</option>
             <option value="last_login">Recently signed in</option>
             <option value="prospects">Most prospects</option>
             <option value="email">Email A–Z</option>
-          </Select>
+          </Select></div>
+          </FilterPanel>
         </div>
 
         {list.error ? (

@@ -25,7 +25,7 @@ import { qk } from '@/lib/queryKeys'
 import { cn } from '@/lib/utils'
 import { notificationService, prospectService } from '@/services'
 
-export function GlobalSearch({ className }: { className?: string }) {
+export function GlobalSearch({ className, autoFocus }: { className?: string; autoFocus?: boolean }) {
   const navigate = useNavigate()
   const [term, setTerm] = useState('')
   const [open, setOpen] = useState(false)
@@ -71,6 +71,7 @@ export function GlobalSearch({ className }: { className?: string }) {
           <Search className="pointer-events-none absolute top-1/2 left-3.5 size-4 -translate-y-1/2 text-ink-400" aria-hidden />
           <input
             ref={inputRef}
+            autoFocus={autoFocus}
             value={term}
             onChange={(event) => {
               setTerm(event.target.value)
@@ -79,7 +80,7 @@ export function GlobalSearch({ className }: { className?: string }) {
             onFocus={() => setOpen(true)}
             placeholder="Search prospects, name, or phone…"
             aria-label="Search prospects"
-            className="h-10 w-full rounded-full border border-line bg-ink-50/60 pr-10 pl-10 text-sm placeholder:text-ink-400 focus:border-brand-300 focus:bg-white focus:ring-4 focus:ring-brand-100 focus:outline-none"
+            className="h-9 w-full rounded-lg border border-line bg-ink-50/60 pr-10 pl-10 text-[13px] placeholder:text-ink-400 focus:border-brand-300 focus:bg-white focus:ring-4 focus:ring-brand-100 focus:outline-none"
           />
           <kbd className="absolute top-1/2 right-3 hidden -translate-y-1/2 rounded border border-line bg-white px-1.5 text-[10px] text-ink-400 sm:block">/</kbd>
         </form>
@@ -141,7 +142,7 @@ export function NotificationBell() {
     <Popover>
       <PopoverTrigger asChild>
         <Button variant="ghost" size="icon" className="relative rounded-full" aria-label={`Notifications${unread ? `, ${unread} unread` : ''}`}>
-          <Bell className="!size-5" />
+          <Bell className="!size-[18px]" />
           {unread > 0 && (
             <span className="tabular absolute top-1 right-1 grid h-4 min-w-4 place-items-center rounded-full bg-brand-600 px-1 text-[10px] font-semibold text-white ring-2 ring-white">
               {unread > 9 ? '9+' : unread}
@@ -217,11 +218,11 @@ export function UserMenu({ compact }: { compact?: boolean }) {
           className="flex items-center gap-2.5 rounded-full py-1 pr-2 pl-1 transition-colors hover:bg-ink-100"
           aria-label="Account menu"
         >
-          <Avatar name={user.full_name} className="size-9 bg-brand-100 text-brand-700" />
+          <Avatar name={user.full_name} className="size-8 bg-brand-100 text-[11px] text-brand-700" />
           {!compact && (
             <span className="hidden text-left leading-tight md:block">
-              <span className="block text-sm font-semibold text-ink-900">{user.full_name}</span>
-              <span className="block text-xs text-ink-500">{user.job_title || 'Advisor'}</span>
+              <span className="block text-[13px] font-semibold text-ink-900">{user.full_name}</span>
+              <span className="block text-[11.5px] text-ink-500">{user.job_title || 'Advisor'}</span>
             </span>
           )}
           {!compact && <ChevronDown className="hidden size-4 text-ink-400 md:block" aria-hidden />}

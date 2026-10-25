@@ -6,12 +6,12 @@ import * as React from 'react'
 import { cn } from '@/lib/utils'
 
 export const buttonVariants = cva(
-  'inline-flex shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-xl text-sm font-medium transition-[background-color,box-shadow,transform,color] duration-150 select-none active:scale-[0.98] disabled:pointer-events-none disabled:opacity-50 [&_svg]:size-4 [&_svg]:shrink-0',
+  'inline-flex shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-lg text-[13px] font-medium transition-[background-color,box-shadow,transform,color] duration-150 select-none active:scale-[0.98] disabled:pointer-events-none disabled:opacity-50 [&_svg]:size-4 [&_svg]:shrink-0',
   {
     variants: {
       variant: {
         primary:
-          'bg-brand-600 text-white shadow-sm shadow-brand-900/20 hover:bg-brand-700 focus-visible:ring-4 focus-visible:ring-brand-200',
+          'bg-brand-600 text-white shadow-xs hover:bg-brand-700 focus-visible:ring-4 focus-visible:ring-brand-200',
         secondary: 'border border-line bg-white text-ink-700 shadow-xs hover:bg-ink-50 hover:text-ink-900',
         soft: 'bg-brand-50 text-brand-700 hover:bg-brand-100',
         ghost: 'text-ink-600 hover:bg-ink-100 hover:text-ink-900',
@@ -19,10 +19,10 @@ export const buttonVariants = cva(
         link: 'h-auto px-0 text-brand-700 underline-offset-4 hover:underline active:scale-100',
       },
       size: {
-        sm: 'h-8 px-3 text-[13px]',
-        md: 'h-10 px-4',
-        lg: 'h-12 px-5 text-base',
-        icon: 'size-10',
+        sm: 'h-8 px-3 text-[12.5px]',
+        md: 'h-10 px-3.5 md:h-9',
+        lg: 'h-11 px-5 text-sm',
+        icon: 'size-10 md:size-9',
         'icon-sm': 'size-8',
       },
     },

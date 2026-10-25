@@ -1,4 +1,4 @@
-import { CalendarDays, ClipboardCheck, Home, Menu, Users, X } from 'lucide-react'
+import { CalendarDays, ClipboardCheck, Home, Menu, Search, Users, X } from 'lucide-react'
 import { Dialog as D } from 'radix-ui'
 import { useEffect, useState } from 'react'
 import { NavLink, Outlet, useLocation } from 'react-router'
@@ -23,12 +23,16 @@ const BOTTOM_NAV = [
 export function AppLayout() {
   const [collapsed, setCollapsed] = useLocalPreference<boolean>('sidebar-collapsed', false)
   const [drawerOpen, setDrawerOpen] = useState(false)
+  const [mobileSearch, setMobileSearch] = useState(false)
   const location = useLocation()
   const badge = useFollowUpBadge()
   const { user } = useAuth()
   const navItems = navItemsFor(Boolean(user?.is_staff))
 
-  useEffect(() => setDrawerOpen(false), [location.pathname])
+  useEffect(() => {
+    setDrawerOpen(false)
+    setMobileSearch(false)
+  }, [location.pathname])
 
   return (
     <QuickActionsProvider>
@@ -40,7 +44,7 @@ export function AppLayout() {
 
         <div className="flex min-w-0 flex-1 flex-col">
           {/* Desktop / tablet top bar */}
-          <header className="sticky top-0 z-30 hidden h-16 items-center gap-4 border-b border-line bg-white/85 px-6 backdrop-blur-md md:flex">
+          <header className="sticky top-0 z-30 hidden h-14 items-center gap-4 border-b border-line bg-white/90 px-6 backdrop-blur-md md:flex">
             <button
               type="button"
               className="-ml-2 rounded-lg p-2 text-ink-500 hover:bg-ink-100 lg:hidden"
@@ -49,7 +53,7 @@ export function AppLayout() {
             >
               <Menu className="size-5" />
             </button>
-            <GlobalSearch className="w-full max-w-md" />
+            <GlobalSearch className="w-full max-w-sm" />
             <div className="ml-auto flex items-center gap-2">
               <NotificationBell />
               <span className="mx-1 h-6 w-px bg-line" aria-hidden />
@@ -61,15 +65,26 @@ export function AppLayout() {
           <header className="sticky top-0 z-30 flex h-14 items-center gap-2 border-b border-line bg-white/90 px-4 pt-[env(safe-area-inset-top)] backdrop-blur-md md:hidden">
             <Logo subtitle="" className="[&_svg]:size-8" />
             <div className="ml-auto flex items-center gap-1">
+              <button
+                type="button"
+                onClick={() => setMobileSearch((v) => !v)}
+                className="grid size-10 place-items-center rounded-full text-ink-500 hover:bg-ink-100"
+                aria-label={mobileSearch ? 'Close search' : 'Search prospects'}
+                aria-expanded={mobileSearch}
+              >
+                {mobileSearch ? <X className="size-[18px]" /> : <Search className="size-[18px]" />}
+              </button>
               <NotificationBell />
               <UserMenu compact />
             </div>
           </header>
-          <div className="border-b border-line bg-white px-4 py-2.5 md:hidden">
-            <GlobalSearch />
-          </div>
+          {mobileSearch && (
+            <div className="sticky top-14 z-20 border-b border-line bg-white px-4 py-2.5 md:hidden">
+              <GlobalSearch autoFocus />
+            </div>
+          )}
 
-          <main id="main" className="mx-auto w-full max-w-[1440px] flex-1 px-4 pt-5 pb-28 sm:px-6 md:pb-10 lg:px-8 lg:pt-7">
+          <main id="main" className="mx-auto w-full max-w-[1360px] flex-1 px-4 pt-4 pb-28 sm:px-6 md:pb-10 lg:px-7 lg:pt-6">
             <Outlet />
           </main>
         </div>
@@ -140,8 +155,8 @@ export function AppLayout() {
                     end={item.end}
                     className={({ isActive }) =>
                       cn(
-                        'flex h-12 items-center gap-3 rounded-xl px-3 text-sm font-medium',
-                        isActive ? 'bg-brand-600 text-white' : 'text-ink-700 hover:bg-ink-100',
+                        'flex h-11 items-center gap-3 rounded-lg px-3 text-sm font-medium',
+                        isActive ? 'bg-brand-50 text-brand-700' : 'text-ink-700 hover:bg-ink-100',
                       )
                     }
                   >

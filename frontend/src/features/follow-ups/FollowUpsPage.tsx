@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 
 import { Pagination } from '@/components/data-display/common'
 import { EmptyState, ErrorState, ListSkeleton } from '@/components/data-display/states'
+import { FilterPanel, FilterToggleButton, useFilterToggle } from '@/components/forms/FilterToggle'
 import { PageHeader } from '@/components/layout/PageHeader'
 import { Button } from '@/components/ui/button'
 import { Input, Select } from '@/components/ui/input'
@@ -42,6 +43,7 @@ export function FollowUpsPage() {
   const debounced = useDebouncedValue(term, 300)
   const { scheduleFollowUp } = useQuickActions()
   const { open, dialogs } = useFollowUpDialogs()
+  const panel = useFilterToggle()
 
   useEffect(() => {
     if (debounced !== filters.search) update({ search: debounced })
@@ -89,23 +91,28 @@ export function FollowUpsPage() {
       </div>
 
       <div className="card overflow-hidden">
-        <div className="flex flex-col gap-2 border-b border-line p-4 sm:flex-row sm:px-5">
-          <div className="relative flex-1">
-            <Search className="pointer-events-none absolute top-1/2 left-3.5 size-4 -translate-y-1/2 text-ink-400" aria-hidden />
-            <Input value={term} onChange={(e) => setTerm(e.target.value)} placeholder="Search subject or prospect" className="pl-10" aria-label="Search follow-ups" />
+        <div className="flex flex-col gap-2 border-b border-line p-3 sm:px-4 md:flex-row md:items-center">
+          <div className="flex items-center gap-2 md:flex-1">
+            <div className="relative min-w-0 flex-1">
+              <Search className="pointer-events-none absolute top-1/2 left-3.5 size-4 -translate-y-1/2 text-ink-400" aria-hidden />
+              <Input value={term} onChange={(e) => setTerm(e.target.value)} placeholder="Search subject or prospect" className="pl-10" aria-label="Search follow-ups" />
+            </div>
+            <FilterToggleButton open={panel.open} onToggle={panel.toggle} activeCount={[filters.activity_type, filters.priority].filter(Boolean).length} controls="follow-up-filters" />
           </div>
-          <Select value={filters.activity_type} onChange={(e) => update({ activity_type: e.target.value })} aria-label="Type" className="sm:w-52">
+          <FilterPanel id="follow-up-filters" open={panel.open} className="flex-col gap-2 md:flex-row">
+          <div className="md:w-52"><Select value={filters.activity_type} onChange={(e) => update({ activity_type: e.target.value })} aria-label="Type">
             <option value="">All types</option>
             {ACTIVITY_TYPES.map((t) => (
               <option key={t} value={t}>{ACTIVITY_META[t].label}</option>
             ))}
-          </Select>
-          <Select value={filters.priority} onChange={(e) => update({ priority: e.target.value })} aria-label="Priority" className="sm:w-40">
+          </Select></div>
+          <div className="md:w-40"><Select value={filters.priority} onChange={(e) => update({ priority: e.target.value })} aria-label="Priority">
             <option value="">All priorities</option>
             {PRIORITIES.map((p) => (
               <option key={p} value={p}>{PRIORITY_META[p].label}</option>
             ))}
-          </Select>
+          </Select></div>
+          </FilterPanel>
         </div>
 
         {error ? (
@@ -123,7 +130,7 @@ export function FollowUpsPage() {
           <div className={cn(isFetching && 'opacity-70')}>
             {groupByDay(data.results, field).map(([day, items]) => (
               <section key={day}>
-                <h2 className="sticky top-16 z-10 border-y border-line bg-ink-50/95 px-4 py-1.5 text-xs font-semibold text-ink-500 backdrop-blur sm:px-5">
+                <h2 className="sticky top-14 z-10 border-y border-line bg-ink-50/95 px-4 py-1.5 text-xs font-semibold text-ink-500 backdrop-blur sm:px-5">
                   {day === today ? 'Today' : formatDate(day, 'EEEE, MMM d, yyyy')}
                 </h2>
                 <div className="divide-y divide-line">

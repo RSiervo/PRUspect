@@ -234,34 +234,34 @@ export function ProspectsPage() {
             <table className="w-full min-w-[1280px] text-sm">
               <thead className="bg-ink-50/70 text-left text-xs font-medium text-ink-500">
                 <tr>
-                  <th className="sticky left-0 z-10 w-10 bg-ink-50 px-4 py-3">
+                  <th className="sticky left-0 z-10 w-10 bg-ink-50 px-4 py-2.5">
                     <Checkbox
                       checked={allSelected ? true : someSelected ? 'indeterminate' : false}
                       onCheckedChange={(c) => setSelected(c === true ? new Set(results.map((p) => p.id)) : new Set())}
                       aria-label="Select all on this page"
                     />
                   </th>
-                  <th className="sticky left-10 z-10 bg-ink-50 px-3 py-3">Prospect</th>
-                  <th className="px-3 py-3">Contact number</th>
-                  <th className="px-3 py-3">Email</th>
-                  <th className="px-3 py-3">Occupation</th>
-                  <th className="px-3 py-3">Source</th>
-                  <th className="px-3 py-3">Insurance interest</th>
-                  <th className="px-3 py-3">Status</th>
-                  <th className="px-3 py-3">Priority</th>
-                  <th className="px-3 py-3">Last contact</th>
-                  <th className="px-3 py-3">Next follow-up</th>
-                  <th className="px-3 py-3">Date added</th>
-                  <th className="px-3 py-3"><span className="sr-only">Actions</span></th>
+                  <th className="sticky left-10 z-10 bg-ink-50 px-3 py-2.5">Prospect</th>
+                  <th className="px-3 py-2.5">Contact number</th>
+                  <th className="px-3 py-2.5">Email</th>
+                  <th className="px-3 py-2.5">Occupation</th>
+                  <th className="px-3 py-2.5">Source</th>
+                  <th className="px-3 py-2.5">Insurance interest</th>
+                  <th className="px-3 py-2.5">Status</th>
+                  <th className="px-3 py-2.5">Priority</th>
+                  <th className="px-3 py-2.5">Last contact</th>
+                  <th className="px-3 py-2.5">Next follow-up</th>
+                  <th className="px-3 py-2.5">Date added</th>
+                  <th className="px-3 py-2.5"><span className="sr-only">Actions</span></th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-line">
                 {results.map((p) => (
                   <tr key={p.id} className={cn('group hover:bg-ink-50/50', selected.has(p.id) && 'bg-brand-50/40')}>
-                    <td className="sticky left-0 z-10 bg-white px-4 py-3 group-hover:bg-ink-50">
+                    <td className="sticky left-0 z-10 bg-white px-4 py-2.5 group-hover:bg-ink-50">
                       <Checkbox checked={selected.has(p.id)} onCheckedChange={(c) => toggleOne(p.id, c === true)} aria-label={`Select ${p.full_name}`} />
                     </td>
-                    <td className="sticky left-10 z-10 bg-white px-3 py-3 group-hover:bg-ink-50">
+                    <td className="sticky left-10 z-10 bg-white px-3 py-2.5 group-hover:bg-ink-50">
                       <div className="flex items-center gap-3">
                         <Avatar name={p.full_name} />
                         <div className="min-w-0">
@@ -276,29 +276,29 @@ export function ProspectsPage() {
                         </div>
                       </div>
                     </td>
-                    <td className="px-3 py-3 whitespace-nowrap text-ink-700">
+                    <td className="px-3 py-2.5 whitespace-nowrap text-ink-700">
                       {p.mobile ? (
                         <a href={`tel:${p.mobile}`} className="inline-flex items-center gap-1.5 hover:text-brand-700"><Phone className="size-3.5 text-ink-400" />{p.mobile}</a>
                       ) : '—'}
                     </td>
-                    <td className="max-w-52 truncate px-3 py-3 text-ink-700">
+                    <td className="max-w-52 truncate px-3 py-2.5 text-ink-700">
                       {p.email ? (
                         <a href={`mailto:${p.email}`} className="inline-flex items-center gap-1.5 hover:text-brand-700"><Mail className="size-3.5 text-ink-400" />{p.email}</a>
                       ) : '—'}
                     </td>
-                    <td className="max-w-40 truncate px-3 py-3 text-ink-700">{p.occupation || '—'}</td>
-                    <td className="px-3 py-3 whitespace-nowrap text-ink-700">{p.source?.name ?? '—'}</td>
-                    <td className="max-w-44 truncate px-3 py-3 text-ink-700" title={p.insurance_interests.map((i) => i.name).join(', ')}>
+                    <td className="max-w-40 truncate px-3 py-2.5 text-ink-700">{p.occupation || '—'}</td>
+                    <td className="px-3 py-2.5 whitespace-nowrap text-ink-700">{p.source?.name ?? '—'}</td>
+                    <td className="max-w-44 truncate px-3 py-2.5 text-ink-700" title={p.insurance_interests.map((i) => i.name).join(', ')}>
                       {p.insurance_interests.map((i) => i.name).join(', ') || '—'}
                     </td>
-                    <td className="px-3 py-3">
+                    <td className="px-3 py-2.5">
                       <StatusChanger prospectId={p.id} prospectName={p.full_name} status={p.status} disabled={p.is_archived} />
                     </td>
-                    <td className="px-3 py-3"><PriorityBadge priority={p.priority} /></td>
-                    <td className="px-3 py-3 whitespace-nowrap text-ink-600">{timeAgo(p.last_contacted_at)}</td>
-                    <td className="px-3 py-3 whitespace-nowrap text-ink-700"><NextFollowUp value={p.next_follow_up_at} /></td>
-                    <td className="px-3 py-3 whitespace-nowrap text-ink-600">{formatDate(p.created_at)}</td>
-                    <td className="px-3 py-3 text-right"><ProspectRowActions prospect={p} /></td>
+                    <td className="px-3 py-2.5"><PriorityBadge priority={p.priority} /></td>
+                    <td className="px-3 py-2.5 whitespace-nowrap text-ink-600">{timeAgo(p.last_contacted_at)}</td>
+                    <td className="px-3 py-2.5 whitespace-nowrap text-ink-700"><NextFollowUp value={p.next_follow_up_at} /></td>
+                    <td className="px-3 py-2.5 whitespace-nowrap text-ink-600">{formatDate(p.created_at)}</td>
+                    <td className="px-3 py-2.5 text-right"><ProspectRowActions prospect={p} /></td>
                   </tr>
                 ))}
               </tbody>
