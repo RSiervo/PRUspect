@@ -76,6 +76,9 @@ class UserSettings(models.Model):
         default=0,
         help_text="Informational retention target for archived prospects. 0 = keep until deleted manually.",
     )
+    # Private calendar subscription (iCal) link; empty = turned off.
+    calendar_feed_token = models.CharField(max_length=64, unique=True, null=True, blank=True)
+    calendar_feed_show_names = models.BooleanField(default=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self) -> str:

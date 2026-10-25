@@ -1,3 +1,4 @@
+import { DndContext, PointerSensor, TouchSensor, useDraggable, useDroppable, useSensor, useSensors, type DragEndEvent } from '@dnd-kit/core'
 import { useMutation, useQuery } from '@tanstack/react-query'
 import {
   addDays,
@@ -12,6 +13,7 @@ import {
 } from 'date-fns'
 import { CalendarClock, CalendarPlus, CheckCircle2, ChevronLeft, ChevronRight, ExternalLink, Plus } from 'lucide-react'
 import { useMemo, useState } from 'react'
+import type * as React from 'react'
 import { Link } from 'react-router'
 import { toast } from 'sonner'
 
@@ -26,8 +28,8 @@ import { useQuickActions } from '@/features/quick-actions/QuickActions'
 import { useQueryState } from '@/hooks'
 import { errorMessage } from '@/lib/api'
 import { ACTIVITY_META } from '@/lib/constants'
-import { dateKey, formatDateTime, formatTime, getTimeZone, keyToDate, todayKey } from '@/lib/datetime'
-import { qk } from '@/lib/queryKeys'
+import { dateKey, formatDateTime, formatTime, getTimeZone, isoToZonedParts, keyToDate, todayKey, zonedToIso } from '@/lib/datetime'
+import { invalidateCrm, qk } from '@/lib/queryKeys'
 import { cn } from '@/lib/utils'
 import { calendarService, followUpService } from '@/services'
 import type { CalendarEvent } from '@/types/api'
@@ -66,6 +68,27 @@ function EventChip({ event, onOpen, compact }: { event: CalendarEvent; onOpen: (
   )
 }
 
+/** Day cell that accepts dropped events (month and week views). */
+function DroppableDay({ id, className, children }: { id: string; className?: string; children: React.ReactNode }) {
+  const { setNodeRef, isOver } = useDroppable({ id })
+  return (
+    <div ref={setNodeRef} className={cn(className, isOver && 'bg-brand-50/70 ring-2 ring-inset ring-brand-300')}>
+      {children}
+    </div>
+  )
+}
+
+/** Pending events can be dragged to another day; completed/canceled stay put. */
+function DraggableEvent({ event, children }: { event: CalendarEvent; children: React.ReactNode }) {
+  const disabled = event.status !== 'pending'
+  const { setNodeRef, listeners, attributes, isDragging } = useDraggable({ id: `event-${event.id}`, data: { event }, disabled })
+  return (
+    <div ref={setNodeRef} {...(disabled ? {} : listeners)} {...(disabled ? {} : attributes)} role={undefined} tabIndex={undefined} className={cn(!disabled && 'cursor-grab touch-manipulation active:cursor-grabbing', isDragging && 'relative z-20 opacity-80 shadow-lg')}>
+      {children}
+    </div>
+  )
+}
+
 export function CalendarPage() {
   const [query, update] = useQueryState({ view: 'month', date: '' })
   const view = (['month', 'week', 'agenda'].includes(query.view) ? query.view : 'month') as View
@@ -75,6 +98,37 @@ export function CalendarPage() {
   const [selected, setSelected] = useState<CalendarEvent | null>(null)
   const { scheduleFollowUp } = useQuickActions()
   const { open, dialogs } = useFollowUpDialogs()
+  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 6 } }), useSensor(TouchSensor, { activationConstraint: { delay: 250, tolerance: 6 } }))
+
+  const moveEvent = useMutation({
+    mutationFn: ({ id, iso, reason }: { id: number; iso: string; reason: string }) => followUpService.reschedule(id, iso, reason),
+    onSuccess: () => invalidateCrm(),
+    onError: (e) => toast.error(errorMessage(e)),
+  })
+
+  const onDragEnd = ({ active, over }: DragEndEvent) => {
+    const event = active.data.current?.event as CalendarEvent | undefined
+    const target = over?.id as string | undefined
+    if (!event || !target) return
+    const from = dateKey(event.start)
+    if (target === from) return
+    if (target < today) {
+      toast.error('Pick today or a later day.')
+      return
+    }
+    const original = event.start
+    const iso = zonedToIso(target, isoToZonedParts(event.start).time)
+    moveEvent.mutate(
+      { id: event.id, iso, reason: 'Moved on the calendar' },
+      {
+        onSuccess: () =>
+          toast.success(`Moved to ${format(keyToDate(target), 'EEE, MMM d')}`, {
+            description: event.title,
+            action: { label: 'Undo', onClick: () => moveEvent.mutate({ id: event.id, iso: original, reason: 'Undo calendar move' }) },
+          }),
+      },
+    )
+  }
 
   const { data, isLoading, error, refetch } = useQuery({
     queryKey: [...qk.calendar, k(start), k(end)],
@@ -150,15 +204,17 @@ export function CalendarPage() {
                 <div key={d} className="py-2">{d}</div>
               ))}
             </div>
+            <DndContext sensors={sensors} onDragEnd={onDragEnd}>
             <div className="grid grid-cols-7">
               {days.map((day) => {
                 const key = k(day)
                 const events = byDay.get(key) ?? []
                 const isToday = key === today
                 return (
-                  <div
+                  <DroppableDay
                     key={key}
-                    className={cn('group min-h-20 border-r border-b border-line p-1 last:border-r-0 sm:min-h-28 sm:p-1.5 [&:nth-child(7n)]:border-r-0', !isSameMonth(day, anchor) && 'bg-ink-50/40')}
+                    id={key}
+                    className={cn('group min-h-20 border-r border-b border-line p-1 transition-colors last:border-r-0 sm:min-h-28 sm:p-1.5 [&:nth-child(7n)]:border-r-0', !isSameMonth(day, anchor) && 'bg-ink-50/40')}
                   >
                     <div className="mb-1 flex items-center justify-between">
                       <button
@@ -177,7 +233,7 @@ export function CalendarPage() {
                     </div>
                     <div className="space-y-1">
                       {events.slice(0, 3).map((e) => (
-                        <div key={e.id} className="hidden sm:block"><EventChip event={e} onOpen={setSelected} /></div>
+                        <div key={e.id} className="hidden sm:block"><DraggableEvent event={e}><EventChip event={e} onOpen={setSelected} /></DraggableEvent></div>
                       ))}
                       {events.length > 0 && (
                         <div className="flex justify-center gap-0.5 sm:hidden" aria-hidden>
@@ -192,18 +248,21 @@ export function CalendarPage() {
                         </button>
                       )}
                     </div>
-                  </div>
+                  </DroppableDay>
                 )
               })}
             </div>
+            </DndContext>
+            <p className="hidden px-5 py-2 text-[11px] text-ink-400 sm:block">Tip: drag a pending event to another day to reschedule it (same time).</p>
           </div>
         ) : view === 'week' ? (
+          <DndContext sensors={sensors} onDragEnd={onDragEnd}>
           <div className="grid grid-cols-1 divide-y divide-line md:grid-cols-7 md:divide-x md:divide-y-0">
             {days.map((day) => {
               const key = k(day)
               const events = byDay.get(key) ?? []
               return (
-                <div key={key} className="min-h-24 p-3 md:min-h-96">
+                <DroppableDay key={key} id={key} className="min-h-24 p-3 transition-colors md:min-h-96">
                   <div className="mb-2 flex items-center justify-between md:flex-col md:items-start">
                     <p className={cn('text-xs font-medium', key === today ? 'text-brand-700' : 'text-ink-500')}>
                       {format(day, 'EEE')} <span className={cn('tabular ml-1 text-base font-semibold', key === today ? 'text-brand-700' : 'text-ink-900')}>{format(day, 'd')}</span>
@@ -217,8 +276,8 @@ export function CalendarPage() {
                   <div className="space-y-1.5">
                     {events.length === 0 && <p className="text-xs text-ink-300">No events</p>}
                     {events.map((e) => (
+                      <DraggableEvent key={e.id} event={e}>
                       <button
-                        key={e.id}
                         type="button"
                         onClick={() => setSelected(e)}
                         className={cn('w-full rounded-lg border-l-4 bg-white p-2 text-left shadow-xs ring-1 ring-line hover:shadow-sm', e.status === 'completed' ? 'border-l-ink-300 opacity-60' : e.is_overdue ? 'border-l-amber-500' : e.is_appointment ? 'border-l-brand-600' : 'border-l-sky-500')}
@@ -227,12 +286,14 @@ export function CalendarPage() {
                         <p className="truncate text-xs font-medium text-ink-900">{e.title}</p>
                         <p className="truncate text-[11px] text-ink-500">{e.prospect.full_name}</p>
                       </button>
+                      </DraggableEvent>
                     ))}
                   </div>
-                </div>
+                </DroppableDay>
               )
             })}
           </div>
+          </DndContext>
         ) : (
           <div>
             {byDay.size === 0 ? (

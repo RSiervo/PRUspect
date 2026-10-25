@@ -226,3 +226,46 @@ class SettingsView(APIView):
             record(user=request.user, action=AuditAction.SETTINGS_CHANGED, entity=obj,
                    summary=f"Changed settings: {', '.join(sorted(changes))}", changes=changes)
         return Response(serializer.data)
+
+
+class CalendarFeedSettingsView(APIView):
+    """Turn the private calendar link on/off, replace it, or toggle prospect names."""
+
+    def _payload(self, request, prefs):
+        if not prefs.calendar_feed_token:
+            return {"enabled": False, "url": None, "webcal_url": None, "show_names": prefs.calendar_feed_show_names}
+        url = request.build_absolute_uri(f"/api/v1/calendar/feed/{prefs.calendar_feed_token}.ics")
+        if not settings.DEBUG and url.startswith("http://"):
+            url = "https://" + url[len("http://"):]
+        return {"enabled": True, "url": url, "webcal_url": "webcal://" + url.split("://", 1)[1],
+                "show_names": prefs.calendar_feed_show_names}
+
+    def get(self, request):
+        prefs, _ = UserSettings.objects.get_or_create(user=request.user)
+        return Response(self._payload(request, prefs))
+
+    def post(self, request):
+        """Create (or replace) the secret link. Replacing breaks old subscriptions."""
+        import secrets
+
+        prefs, _ = UserSettings.objects.get_or_create(user=request.user)
+        prefs.calendar_feed_token = secrets.token_urlsafe(32)
+        if "show_names" in request.data:
+            prefs.calendar_feed_show_names = bool(request.data["show_names"])
+        prefs.save(update_fields=["calendar_feed_token", "calendar_feed_show_names", "updated_at"])
+        record(user=request.user, action=AuditAction.SETTINGS_CHANGED, entity=prefs, summary="Created a calendar subscription link")
+        return Response(self._payload(request, prefs))
+
+    def patch(self, request):
+        prefs, _ = UserSettings.objects.get_or_create(user=request.user)
+        if "show_names" in request.data:
+            prefs.calendar_feed_show_names = bool(request.data["show_names"])
+            prefs.save(update_fields=["calendar_feed_show_names", "updated_at"])
+        return Response(self._payload(request, prefs))
+
+    def delete(self, request):
+        prefs, _ = UserSettings.objects.get_or_create(user=request.user)
+        prefs.calendar_feed_token = None
+        prefs.save(update_fields=["calendar_feed_token", "updated_at"])
+        record(user=request.user, action=AuditAction.SETTINGS_CHANGED, entity=prefs, summary="Turned off the calendar subscription link")
+        return Response(self._payload(request, prefs))

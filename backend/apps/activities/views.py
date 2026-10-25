@@ -266,3 +266,33 @@ class MessageTemplateViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         serializer.save(owner=self.request.user)
+
+
+class CalendarFeedView(APIView):
+    """Public iCal feed addressed by a secret token (for Google/Apple/Outlook subscriptions)."""
+
+    permission_classes = []
+    authentication_classes = []
+    throttle_scope = "calendar_feed"
+
+    def get_throttles(self):
+        from rest_framework.throttling import ScopedRateThrottle
+
+        return [ScopedRateThrottle()]
+
+    def get(self, request, token):
+        from django.http import Http404, HttpResponse
+
+        from apps.accounts.models import UserSettings
+
+        from .ics import build_feed
+
+        prefs = UserSettings.objects.select_related("user").filter(calendar_feed_token=token, user__is_active=True).first()
+        if prefs is None or len(token) < 32:
+            raise Http404()
+        base = request.build_absolute_uri("/").rstrip("/")
+        response = HttpResponse(build_feed(prefs.user, base, prefs.calendar_feed_show_names),
+                                content_type="text/calendar; charset=utf-8")
+        response["Content-Disposition"] = 'inline; filename="pruspect.ics"'
+        response["Cache-Control"] = "private, max-age=900"
+        return response

@@ -11,6 +11,7 @@ REST_FRAMEWORK = {
         "user": "100000/hour",
         "auth_login": "1000/min",
         "auth_refresh": "1000/min",
+        "calendar_feed": "1000/min",
     },
 }
 

@@ -127,6 +127,7 @@ REST_FRAMEWORK = {
         "user": "2000/hour",
         "auth_login": env("THROTTLE_LOGIN", "10/min"),
         "auth_refresh": env("THROTTLE_REFRESH", "60/min"),
+        "calendar_feed": env("THROTTLE_CALENDAR_FEED", "60/hour"),
     },
     "TEST_REQUEST_DEFAULT_FORMAT": "json",
 }
