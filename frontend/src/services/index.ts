@@ -11,6 +11,9 @@ import type {
   ConversionData,
   DashboardSummary,
   DuplicateMatch,
+  ImportPreview,
+  ImportResult,
+  ImportValidation,
   MessageTemplate,
   TodayData,
   FollowUp,
@@ -95,6 +98,15 @@ export const prospectService = {
   bulk: (ids: number[], action: string, value = '', reason = '') =>
     api.post<{ updated: number; skipped: number; not_found: number }>('/prospects/bulk/', { ids, action, value, reason }),
   exportCsv: (params: ListParams) => downloadFile('/prospects/export/', params),
+  importPreview: (file: File) => {
+    const form = new FormData()
+    form.append('file', file)
+    return api.upload<ImportPreview>('/prospects/import/preview/', form)
+  },
+  importValidate: (rows: string[][], mapping: Record<string, string>) =>
+    api.post<ImportValidation>('/prospects/import/validate/', { rows, mapping }),
+  importCommit: (rows: string[][], mapping: Record<string, string>, skipDuplicates: boolean) =>
+    api.post<ImportResult>('/prospects/import/', { rows, mapping, skip_duplicates: skipDuplicates }),
 }
 
 export const noteService = {

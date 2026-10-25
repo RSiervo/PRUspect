@@ -626,3 +626,32 @@ export interface TodayData {
   no_next_step_count: number
   definitions: Record<string, string>
 }
+
+export interface ImportPreview {
+  file_name: string
+  headers: string[]
+  rows: string[][]
+  suggested_mapping: Record<string, string>
+  fields: string[]
+  max_rows: number
+}
+
+export interface ImportRowResult {
+  row: number
+  name: string
+  valid: boolean
+  errors: Record<string, string[]>
+  warnings: string[]
+  duplicate_of: { type: 'existing'; prospect_id: number; matched_on: string } | { type: 'file'; row: number; matched_on: string } | null
+}
+
+export interface ImportValidation {
+  rows: ImportRowResult[]
+  summary: { total: number; valid: number; invalid: number; duplicates: number }
+}
+
+export interface ImportResult {
+  created: number
+  skipped_duplicates: number
+  invalid: number
+}

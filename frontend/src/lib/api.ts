@@ -107,12 +107,14 @@ interface RequestOptions {
 
 async function send(path: string, options: RequestOptions): Promise<Response> {
   const headers: Record<string, string> = { Accept: 'application/json', 'X-Requested-With': 'XMLHttpRequest' }
-  if (options.body !== undefined) headers['Content-Type'] = 'application/json'
+  const isForm = typeof FormData !== 'undefined' && options.body instanceof FormData
+  // FormData sets its own multipart boundary header.
+  if (options.body !== undefined && !isForm) headers['Content-Type'] = 'application/json'
   if (accessToken && options.auth !== false) headers.Authorization = `Bearer ${accessToken}`
   return fetch(`${API_BASE}${path}${buildQuery(options.query)}`, {
     method: options.method ?? 'GET',
     headers,
-    body: options.body === undefined ? undefined : JSON.stringify(options.body),
+    body: options.body === undefined ? undefined : isForm ? (options.body as FormData) : JSON.stringify(options.body),
     credentials: 'include',
     signal: options.signal,
   })
@@ -147,6 +149,7 @@ export const api = {
   post: <T>(path: string, body?: unknown) => request<T>(path, { method: 'POST', body: body ?? {} }),
   patch: <T>(path: string, body: unknown) => request<T>(path, { method: 'PATCH', body }),
   delete: <T = void>(path: string, body?: unknown) => request<T>(path, { method: 'DELETE', body }),
+  upload: <T>(path: string, form: FormData) => request<T>(path, { method: 'POST', body: form }),
 }
 
 /** Download a CSV (or other file) from an authenticated endpoint. */

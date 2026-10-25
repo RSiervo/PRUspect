@@ -14,6 +14,7 @@ import { DashboardPage } from '@/features/dashboard/DashboardPage'
 import { FollowUpsPage } from '@/features/follow-ups/FollowUpsPage'
 import { PipelinePage } from '@/features/pipeline/PipelinePage'
 import { ProspectDetailPage } from '@/features/prospects/ProspectDetailPage'
+import { ImportPage } from '@/features/prospects/ImportPage'
 import { ProspectFormPage } from '@/features/prospects/ProspectFormPage'
 import { ProspectsPage } from '@/features/prospects/ProspectsPage'
 import { ReportsPage } from '@/features/reports/ReportsPage'
@@ -48,6 +49,7 @@ export const routes = [
           { index: true, element: <DashboardPage /> },
           { path: 'prospects', element: <ProspectsPage /> },
           { path: 'prospects/new', element: <ProspectFormPage /> },
+          { path: 'prospects/import', element: <ImportPage /> },
           { path: 'prospects/:id', element: <ProspectDetailPage /> },
           { path: 'prospects/:id/edit', element: <ProspectFormPage /> },
           { path: 'follow-ups', element: <FollowUpsPage /> },

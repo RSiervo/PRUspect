@@ -21,6 +21,7 @@ class AuditAction(models.TextChoices):
     OPPORTUNITY_UPDATED = "opportunity.updated", "Opportunity updated"
     OPPORTUNITY_DELETED = "opportunity.deleted", "Opportunity deleted"
     EXPORT = "data.exported", "Data exported"
+    PROSPECTS_IMPORTED = "data.imported", "Prospects imported"
     SETTINGS_CHANGED = "settings.changed", "Settings changed"
     PASSWORD_CHANGED = "auth.password_changed", "Password changed"
     SIGNED_UP_GOOGLE = "auth.signup_google", "Signed up with Google"

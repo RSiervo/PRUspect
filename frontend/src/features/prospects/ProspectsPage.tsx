@@ -1,5 +1,5 @@
 import { keepPreviousData, useMutation, useQuery } from '@tanstack/react-query'
-import { Archive, ArchiveRestore, Download, Mail, Phone, UserPlus, Users, X } from 'lucide-react'
+import { Archive, ArchiveRestore, Download, Mail, Phone, Upload, UserPlus, Users, X } from 'lucide-react'
 import { useState } from 'react'
 import { Link } from 'react-router'
 import { toast } from 'sonner'
@@ -142,6 +142,11 @@ export function ProspectsPage() {
         description={data ? `${data.count.toLocaleString()} ${archivedTab ? 'archived' : 'active'} prospect${data.count === 1 ? '' : 's'}${filters.search ? ` matching “${filters.search}”` : ''}` : 'Your prospect list'}
         actions={
           <>
+            <Button variant="secondary" asChild>
+              <Link to="/prospects/import">
+                <Upload /> Import
+              </Link>
+            </Button>
             <Button variant="secondary" onClick={() => exportCsv.mutate()} loading={exportCsv.isPending} disabled={!data?.count}>
               <Download /> Export CSV
             </Button>

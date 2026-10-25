@@ -322,6 +322,40 @@ class ProspectViewSet(viewsets.ModelViewSet):
         # Ids that don't exist or belong to someone else are silently counted as not found.
         return Response({"updated": updated, "skipped": skipped, "not_found": len(set(data["ids"])) - len(prospects)})
 
+    @action(detail=False, methods=["post"], url_path="import/preview")
+    def import_preview(self, request):
+        """Read an uploaded .xlsx/.csv and return its columns, rows and a suggested mapping."""
+        from . import importer
+
+        upload = request.FILES.get("file")
+        if upload is None:
+            raise ValidationError({"file": ["Choose a file to upload."]})
+        headers, rows = importer.parse_upload(upload)
+        return Response({
+            "file_name": upload.name,
+            "headers": headers,
+            "rows": rows,
+            "suggested_mapping": importer.suggest_mapping(headers),
+            "fields": list(importer.FIELDS.keys()),
+            "max_rows": importer.MAX_ROWS,
+        })
+
+    @action(detail=False, methods=["post"], url_path="import/validate")
+    def import_validate(self, request):
+        from . import importer
+
+        return Response(importer.validate_rows(request.data.get("rows") or [], request.data.get("mapping") or {}, request))
+
+    @action(detail=False, methods=["post"], url_path="import")
+    def import_commit(self, request):
+        from . import importer
+
+        result = importer.import_rows(
+            request.data.get("rows") or [], request.data.get("mapping") or {}, request,
+            skip_duplicates=bool(request.data.get("skip_duplicates", True)),
+        )
+        return Response(result, status=status.HTTP_201_CREATED)
+
     @action(detail=False, methods=["get"], url_path="options")
     def form_options(self, request):
         """Choice lists the prospect form needs."""
