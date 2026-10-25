@@ -49,16 +49,18 @@ export function DashboardPage() {
 
   return (
     <div className="space-y-5">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <h1 className="text-xl font-semibold tracking-tight text-ink-900 sm:text-[22px]">
-            {greeting()}, {user?.first_name || 'there'}! <span aria-hidden>👋</span>
-          </h1>
-          <p className="mt-0.5 text-[13px] text-ink-500">
-            Here’s your prospect activity at a glance · {formatDate(nowInZone().toISOString(), 'EEEE, MMM d, yyyy')}
+      <div className="flex items-end justify-between gap-4">
+        <div className="min-w-0">
+          <p className="text-[11px] font-medium tracking-[0.06em] text-ink-400 uppercase">
+            {formatDate(nowInZone().toISOString(), 'EEEE, MMM d')}
           </p>
+          <h1 className="mt-0.5 truncate text-[17px] font-semibold tracking-tight text-ink-900 sm:text-[22px]">
+            {greeting()}, {user?.first_name || 'there'} <span aria-hidden>👋</span>
+          </h1>
+          <p className="mt-0.5 hidden text-[13px] text-ink-500 sm:block">Here’s your prospect activity at a glance.</p>
         </div>
-        <Button asChild>
+        {/* On phones the bottom bar's + button adds prospects. */}
+        <Button asChild className="hidden md:inline-flex">
           <Link to="/prospects/new">
             <UserPlus /> Add prospect
           </Link>

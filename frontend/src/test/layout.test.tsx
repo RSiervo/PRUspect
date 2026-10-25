@@ -47,3 +47,19 @@ describe('responsive navigation', () => {
     expect(await screen.findByText('Reports body')).toBeInTheDocument()
   })
 })
+
+describe('phone bottom bar', () => {
+  it('has a center add-prospect button that becomes the active item', async () => {
+    renderRoutes(
+      [{ element: <AppLayout />, children: [{ path: '/', element: <p>Page body</p> }, { path: '/prospects/new', element: <p>New prospect form</p> }] }],
+      '/',
+    )
+    const bottom = screen.getByRole('navigation', { name: 'Primary' })
+    const add = within(bottom).getByRole('link', { name: 'Add prospect' })
+    expect(add).toHaveAttribute('href', '/prospects/new')
+    await userEvent.click(add)
+    expect(await screen.findByText('New prospect form')).toBeInTheDocument()
+    expect(within(bottom).getByRole('link', { name: 'Add prospect' })).toHaveAttribute('aria-current', 'page')
+    expect(within(bottom).getByRole('link', { name: /prospects/i, current: false })).toBeInTheDocument()
+  })
+})

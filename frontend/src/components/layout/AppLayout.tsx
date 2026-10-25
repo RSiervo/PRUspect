@@ -1,7 +1,7 @@
-import { CalendarDays, ClipboardCheck, Home, Menu, Search, Users, X } from 'lucide-react'
+import { ClipboardCheck, Home, Menu, Plus, Search, Users, X } from 'lucide-react'
 import { Dialog as D } from 'radix-ui'
 import { useEffect, useState } from 'react'
-import { NavLink, Outlet, useLocation } from 'react-router'
+import { Link, NavLink, Outlet, useLocation } from 'react-router'
 
 import { useLocalPreference } from '@/hooks'
 import { cn } from '@/lib/utils'
@@ -13,12 +13,17 @@ import { useAuth } from '@/features/auth/AuthProvider'
 import { Sidebar, useFollowUpBadge } from './Sidebar'
 import { GlobalSearch, NotificationBell, UserMenu } from './Topbar'
 
-const BOTTOM_NAV = [
-  { to: '/', label: 'Home', icon: Home, end: true },
-  { to: '/prospects', label: 'Prospects', icon: Users },
-  { to: '/follow-ups', label: 'Follow-ups', icon: ClipboardCheck },
-  { to: '/calendar', label: 'Calendar', icon: CalendarDays },
+type BottomItem = { to: string; label: string; icon: typeof Home; match: (path: string) => boolean }
+
+// Phone bar: two items, the raised "add prospect" button, two items.
+const BOTTOM_LEFT: BottomItem[] = [
+  { to: '/', label: 'Home', icon: Home, match: (p) => p === '/' },
+  { to: '/prospects', label: 'Prospects', icon: Users, match: (p) => p.startsWith('/prospects') && p !== '/prospects/new' },
 ]
+const BOTTOM_RIGHT: BottomItem[] = [
+  { to: '/follow-ups', label: 'Follow-ups', icon: ClipboardCheck, match: (p) => p.startsWith('/follow-ups') },
+]
+const NEW_PROSPECT = '/prospects/new'
 
 export function AppLayout() {
   const [collapsed, setCollapsed] = useLocalPreference<boolean>('sidebar-collapsed', false)
@@ -28,6 +33,9 @@ export function AppLayout() {
   const badge = useFollowUpBadge()
   const { user } = useAuth()
   const navItems = navItemsFor(Boolean(user?.is_staff))
+  // "More" lights up for sections that live in the drawer (Calendar, Reports, Settings…).
+  const moreActive =
+    location.pathname !== NEW_PROSPECT && ![...BOTTOM_LEFT, ...BOTTOM_RIGHT].some((item) => item.match(location.pathname))
 
   useEffect(() => {
     setDrawerOpen(false)
@@ -95,34 +103,38 @@ export function AppLayout() {
         className="fixed inset-x-0 bottom-0 z-30 border-t border-line bg-white/95 pb-[env(safe-area-inset-bottom)] backdrop-blur-md md:hidden"
         aria-label="Primary"
       >
-        <ul className="grid grid-cols-5">
-          {BOTTOM_NAV.map((item) => {
-            const Icon = item.icon
-            return (
-              <li key={item.to}>
-                <NavLink
-                  to={item.to}
-                  end={item.end}
-                  className={({ isActive }) =>
-                    cn('relative flex h-16 flex-col items-center justify-center gap-1 text-[11px] font-medium', isActive ? 'text-brand-600' : 'text-ink-500')
-                  }
-                >
-                  <Icon className="size-5" aria-hidden />
-                  {item.label}
-                  {item.to === '/follow-ups' && badge > 0 && (
-                    <span className="tabular absolute top-2 left-1/2 ml-2 grid h-4 min-w-4 place-items-center rounded-full bg-brand-600 px-1 text-[10px] text-white">
-                      {badge > 9 ? '9+' : badge}
-                    </span>
-                  )}
-                </NavLink>
-              </li>
-            )
-          })}
+        <ul className="grid h-16 grid-cols-5 items-center">
+          {BOTTOM_LEFT.map((item) => (
+            <li key={item.to}>
+              <BottomLink item={item} active={item.match(location.pathname)} />
+            </li>
+          ))}
+          <li className="flex justify-center">
+            <Link
+              to={NEW_PROSPECT}
+              aria-label="Add prospect"
+              aria-current={location.pathname === NEW_PROSPECT ? 'page' : undefined}
+              className={cn(
+                '-mt-7 grid size-14 place-items-center rounded-full bg-brand-600 text-white shadow-lg shadow-brand-900/25 ring-4 ring-white transition-transform active:scale-95',
+                location.pathname === NEW_PROSPECT && 'bg-brand-700',
+              )}
+            >
+              <Plus className="size-6" strokeWidth={2.4} aria-hidden />
+            </Link>
+          </li>
+          {BOTTOM_RIGHT.map((item) => (
+            <li key={item.to}>
+              <BottomLink item={item} active={item.match(location.pathname)} badge={badge} />
+            </li>
+          ))}
           <li>
             <button
               type="button"
               onClick={() => setDrawerOpen(true)}
-              className="flex h-16 w-full flex-col items-center justify-center gap-1 text-[11px] font-medium text-ink-500"
+              className={cn(
+                'flex h-16 w-full flex-col items-center justify-center gap-1 text-[10.5px] font-medium',
+                moreActive ? 'text-brand-600' : 'text-ink-500',
+              )}
               aria-label="More navigation"
             >
               <Menu className="size-5" aria-hidden />
@@ -170,5 +182,24 @@ export function AppLayout() {
         </D.Portal>
       </D.Root>
     </QuickActionsProvider>
+  )
+}
+
+function BottomLink({ item, active, badge = 0 }: { item: BottomItem; active: boolean; badge?: number }) {
+  const Icon = item.icon
+  return (
+    <Link
+      to={item.to}
+      aria-current={active ? 'page' : undefined}
+      className={cn('relative flex h-16 flex-col items-center justify-center gap-1 text-[10.5px] font-medium', active ? 'text-brand-600' : 'text-ink-500')}
+    >
+      <Icon className="size-5" strokeWidth={active ? 2.2 : 1.8} aria-hidden />
+      {item.label}
+      {badge > 0 && (
+        <span className="tabular absolute top-2 left-1/2 ml-2 grid h-4 min-w-4 place-items-center rounded-full bg-brand-600 px-1 text-[10px] text-white ring-2 ring-white">
+          {badge > 9 ? '9+' : badge}
+        </span>
+      )}
+    </Link>
   )
 }
