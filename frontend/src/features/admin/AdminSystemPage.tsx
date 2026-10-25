@@ -103,8 +103,8 @@ export function AdminSystemPage() {
   })
   const testAlert = useMutation({
     mutationFn: errorService.testAlert,
-    onSuccess: () => {
-      toast.success('Test alert sent', { description: 'Check your notifications (and your phone, if notifications are on).' })
+    onSuccess: (r) => {
+      toast.success('Test alert sent', { description: r.email_enabled ? 'Check your notifications and your email inbox (and your phone, if notifications are on).' : 'Check your notifications (and your phone, if notifications are on). Email alerts are off: email isn’t set up on the server.' })
       refresh()
       void queryClient.invalidateQueries({ queryKey: ['notifications'] })
     },
@@ -134,7 +134,7 @@ export function AdminSystemPage() {
     <div>
       <PageHeader
         title="System"
-        description="Errors from the server and from people’s browsers. Admins get a notification when a new error appears."
+        description="Errors from the server and from people’s browsers. Admins get a notification and an email when a new error appears."
         actions={
           <Button variant="secondary" onClick={() => testAlert.mutate()} loading={testAlert.isPending}>
             <BellRing /> Send test alert

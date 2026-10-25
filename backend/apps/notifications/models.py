@@ -1,4 +1,4 @@
-"""In-app notifications only. No email or SMS is sent by this system."""
+"""In-app notifications (also sent as phone push when enabled). Error alerts can also be emailed to admins (apps.monitoring)."""
 
 from django.conf import settings
 from django.db import models

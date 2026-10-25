@@ -1,5 +1,7 @@
 from unittest import mock
 
+from django.core import mail
+from django.test import override_settings
 from rest_framework.test import APIClient
 
 from apps.monitoring.models import ErrorEvent
@@ -82,3 +84,35 @@ class ErrorCaptureTests(ApiTestCase):
         self.assertEqual(ErrorEvent.objects.filter(error_type="TestAlert").count(), 1)
         self.assertEqual(Notification.objects.filter(user=self.admin).count(), 2)
         self.assertEqual(self.client.post("/api/v1/admin/errors/test-alert/").status_code, 403)
+
+
+@override_settings(EMAIL_HOST="smtp.example.com", ERROR_ALERT_EMAILS=["ops@example.com"], SITE_URL="https://crm.example.com")
+class ErrorEmailTests(ApiTestCase):
+    def setUp(self):
+        super().setUp()
+        self.admin = make_admin("admin@example.com")
+        mail.outbox = []
+
+    def test_new_error_emails_admins_and_extra_addresses(self):
+        capture(source="server", error_type="RuntimeError", message="boom for maria@example.com", location="GET /api/v1/x/")
+        self.assertEqual(sorted(m.to[0] for m in mail.outbox), ["admin@example.com", "ops@example.com"])
+        msg = mail.outbox[0]
+        self.assertIn("New error: RuntimeError", msg.subject)
+        self.assertIn("https://crm.example.com/admin/system?error=", msg.body)
+        self.assertNotIn("maria@example.com", msg.body)
+
+    def test_repeats_do_not_email_again(self):
+        for _ in range(3):
+            capture(source="server", error_type="RuntimeError", message="same", location="/x")
+        self.assertEqual(len(mail.outbox), 2)
+
+    @override_settings(EMAIL_HOST="")
+    def test_no_email_without_smtp(self):
+        capture(source="server", error_type="RuntimeError", message="x", location="/x")
+        self.assertEqual(len(mail.outbox), 0)
+        self.assertEqual(Notification.objects.filter(user=self.admin).count(), 1)
+
+    def test_email_failure_does_not_break_alerts(self):
+        with mock.patch("django.core.mail.backends.locmem.EmailBackend.send_messages", side_effect=OSError("smtp down")):
+            capture(source="server", error_type="RuntimeError", message="x", location="/x")
+        self.assertEqual(Notification.objects.filter(user=self.admin).count(), 1)

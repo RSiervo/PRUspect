@@ -167,6 +167,23 @@ GOOGLE_ALLOWED_DOMAINS = [d.lower().lstrip("@") for d in env_list("GOOGLE_ALLOWE
 VAPID_PUBLIC_KEY = env("VAPID_PUBLIC_KEY", "").strip()
 VAPID_PRIVATE_KEY = env("VAPID_PRIVATE_KEY", "").strip()
 VAPID_SUBJECT = env("VAPID_SUBJECT", "mailto:admin@example.com").strip()
+# Outgoing email (error alerts to admins). Any SMTP service works, e.g. Gmail with an
+# app password: EMAIL_HOST=smtp.gmail.com, EMAIL_PORT=587, EMAIL_HOST_USER=you@gmail.com,
+# EMAIL_HOST_PASSWORD=<16-character app password>. Empty EMAIL_HOST = no emails.
+EMAIL_HOST = env("EMAIL_HOST", "").strip()
+EMAIL_PORT = int(env("EMAIL_PORT", "587"))
+EMAIL_HOST_USER = env("EMAIL_HOST_USER", "").strip()
+EMAIL_HOST_PASSWORD = env("EMAIL_HOST_PASSWORD", "").strip()
+EMAIL_USE_TLS = env_bool("EMAIL_USE_TLS", EMAIL_PORT == 587)
+EMAIL_USE_SSL = env_bool("EMAIL_USE_SSL", EMAIL_PORT == 465)
+EMAIL_TIMEOUT = 10
+DEFAULT_FROM_EMAIL = env("DEFAULT_FROM_EMAIL", "").strip() or (f"PRUspect <{EMAIL_HOST_USER}>" if EMAIL_HOST_USER else "PRUspect <noreply@localhost>")
+# Error alert emails go to every active admin, plus these extra addresses (comma list).
+ERROR_ALERT_EMAILS = [e.strip().lower() for e in env_list("ERROR_ALERT_EMAILS")]
+ERROR_ALERT_EMAIL_ENABLED = env_bool("ERROR_ALERT_EMAIL_ENABLED", True)
+# Public address of the app, used for links in emails.
+SITE_URL = env("SITE_URL", "https://pruspect.vercel.app").strip().rstrip("/")
+
 # Admins must turn on two-step verification before using admin pages.
 ADMIN_REQUIRE_2FA = env_bool("ADMIN_REQUIRE_2FA", True)
 # Shared secret for the scheduler endpoint (/api/v1/cron/run/).

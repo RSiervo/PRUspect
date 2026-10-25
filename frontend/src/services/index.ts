@@ -259,7 +259,7 @@ export const errorService = {
   resolve: (id: number) => api.post<ErrorEvent>(`/admin/errors/${id}/resolve/`),
   reopen: (id: number) => api.post<ErrorEvent>(`/admin/errors/${id}/reopen/`),
   resolveAll: () => api.post<{ resolved: number }>('/admin/errors/resolve-all/'),
-  testAlert: () => api.post<{ id: number }>('/admin/errors/test-alert/'),
+  testAlert: () => api.post<{ id: number; email_enabled: boolean }>('/admin/errors/test-alert/'),
 }
 
 export const twoFactorService = {

@@ -104,4 +104,6 @@ class ErrorEventViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, viewse
         ErrorEvent.objects.filter(error_type="TestAlert").delete()  # a fresh event always alerts
         event = capture(source=ErrorSource.SERVER, error_type="TestAlert", message="This is a test alert. You can resolve it.",
                         location="POST /api/v1/admin/errors/test-alert/", user=request.user)
-        return Response({"id": event.pk if event else None}, status=201)
+        from .services import email_enabled
+
+        return Response({"id": event.pk if event else None, "email_enabled": email_enabled()}, status=201)

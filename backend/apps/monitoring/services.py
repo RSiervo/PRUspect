@@ -4,6 +4,7 @@ import os
 import re
 from datetime import timedelta
 
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.db import transaction
 from django.db.models import F
@@ -77,6 +78,41 @@ def capture(*, source: str, error_type: str, message: str, location: str = "", s
         return None
 
 
+def email_enabled() -> bool:
+    return bool(settings.EMAIL_HOST and settings.ERROR_ALERT_EMAIL_ENABLED)
+
+
+def _storm(since) -> bool:
+    return ErrorEvent.objects.filter(first_seen__gte=since).count() > MAX_ALERTS_PER_HOUR
+
+
+def email_alert(event: ErrorEvent, title: str, recipients: list[str]) -> int:
+    """Email the alert. Only the scrubbed message and place are included, never the stack trace."""
+    if not email_enabled():
+        return 0
+    from django.core.mail import EmailMessage, get_connection
+
+    where = "Server" if event.source == ErrorSource.SERVER else "Browser"
+    link = f"{settings.SITE_URL}/admin/system?error={event.pk}" if settings.SITE_URL else f"/admin/system?error={event.pk}"
+    body = (
+        f"{title}\n\n"
+        f"Where: {where} · {event.location or 'unknown'}\n"
+        f"Message: {event.message}\n"
+        f"Seen: {event.count} time(s), {event.users_affected} user(s)\n"
+        f"First seen: {timezone.localtime(event.first_seen):%Y-%m-%d %H:%M} ({settings.TIME_ZONE})\n\n"
+        f"Details and stack trace (admins only): {link}\n\n"
+        "You get this email because you are a PRUspect admin. At most 10 alerts per hour are sent.\n"
+    )
+    unique = list(dict.fromkeys(r for r in recipients if r))
+    try:
+        connection = get_connection(fail_silently=False)
+        messages = [EmailMessage(subject=f"[PRUspect] {title}"[:200], body=body, to=[r], connection=connection) for r in unique]
+        return connection.send_messages(messages) or 0
+    except Exception:
+        logger.exception("Could not email error alert %s", event.pk)
+        return 0
+
+
 def alert_admins(event: ErrorEvent, reopened: bool = False) -> int:
     """In-app notification (and phone push, if enabled) to every active admin."""
     from apps.notifications.models import Notification, NotificationKind
@@ -87,12 +123,16 @@ def alert_admins(event: ErrorEvent, reopened: bool = False) -> int:
         title = f"{'Error is back' if reopened else 'New error'}: {event.error_type or where + ' error'}"[:160]
         body = f"{where} · {event.location or 'unknown place'} · {event.message}"[:255]
         sent = 0
+        recipients = []
         for admin in get_user_model().objects.filter(is_active=True, is_staff=True):
             recent = Notification.objects.filter(user=admin, kind=NotificationKind.SYSTEM, link__startswith="/admin/system", created_at__gte=since)
             if recent.count() >= MAX_ALERTS_PER_HOUR:
                 continue  # an error storm: this admin already knows something is wrong
             Notification.objects.create(user=admin, kind=NotificationKind.SYSTEM, title=title, body=body, link=f"/admin/system?error={event.pk}")
+            recipients.append(admin.email)
             sent += 1
+        if recipients or (settings.ERROR_ALERT_EMAILS and not _storm(since)):
+            email_alert(event, title, recipients + settings.ERROR_ALERT_EMAILS)
         return sent
     except Exception:  # pragma: no cover
         logger.exception("Could not alert admins about error %s", event.pk)

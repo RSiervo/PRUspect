@@ -162,6 +162,11 @@ Backend (`backend/.env`, see `backend/.env.example`):
 | `CRON_SECRET` | Shared secret for `POST /api/v1/cron/run/` (the scheduler). Unset = endpoint disabled |
 | `ADMIN_REQUIRE_2FA` | Admin pages require two-step verification (default `True`) |
 | `THROTTLE_CLIENT_ERRORS` | Rate limit for browser error reports (default `30/hour`) |
+| `EMAIL_HOST` / `EMAIL_PORT` / `EMAIL_HOST_USER` / `EMAIL_HOST_PASSWORD` | SMTP for error alert emails. Unset `EMAIL_HOST` = no emails |
+| `DEFAULT_FROM_EMAIL` | Sender, e.g. `PRUspect <you@gmail.com>` (defaults to `EMAIL_HOST_USER`) |
+| `ERROR_ALERT_EMAILS` | Extra comma-separated addresses that also get error alert emails |
+| `ERROR_ALERT_EMAIL_ENABLED` | `False` turns error emails off without removing SMTP settings |
+| `SITE_URL` | Public address used for links in emails (default `https://pruspect.vercel.app`) |
 
 Frontend (`frontend/.env.local`, optional): `VITE_API_BASE_URL` (default `/api/v1`), `VITE_DEV_API_PROXY`.
 Nothing secret belongs in frontend env files.
@@ -456,6 +461,16 @@ contain only a short title and a link; details open inside the app.
   form values are never stored.
 - Every active admin gets a notification (and a phone push, if turned on) when a **new** error
   appears or a **resolved** error comes back. Alerts are capped at 10 per admin per hour.
+- **Email alerts:** with SMTP configured, each of those alerts is also emailed to every active admin
+  (plus any `ERROR_ALERT_EMAILS`). The email has the error type, place, masked message and a link to the
+  System page; the stack trace stays in the app. Same cap of 10 per hour. A failing email server
+  never breaks the in-app alert.
+
+  Gmail setup: turn on 2-Step Verification for the Google account, create an **App password**
+  (Google Account → Security → App passwords), then set on Vercel:
+  `EMAIL_HOST=smtp.gmail.com`, `EMAIL_PORT=587`, `EMAIL_HOST_USER=<that Gmail address>`,
+  `EMAIL_HOST_PASSWORD=<16-character app password>`. Any other SMTP service (Brevo, Resend,
+  Mailgun, Outlook) works the same way. Check it with **Send test alert** on the System page.
 - Admins review errors on the **System** page (sidebar), mark them resolved, and can send a test alert.
 - If a page crashes, users see a "Something went wrong" screen with Reload instead of a blank page.
   After a new deployment, a stale page reloads itself once.
@@ -495,6 +510,7 @@ former team member):
 | Supabase database password | Supabase → *Project Settings → Database → Reset database password*. Update `DATABASE_URL` on Vercel, `BACKUP_DATABASE_URL` on GitHub, then **redeploy** | None for users |
 | `DJANGO_SECRET_KEY` | New value: `python -c "import secrets; print(secrets.token_urlsafe(50))"` → Vercel env → redeploy | Everyone is signed out once |
 | `CRON_SECRET` | New random value on Vercel **and** the GitHub secret | None |
+| `EMAIL_HOST_PASSWORD` | Revoke the app password in your Google account, create a new one, update Vercel | None |
 | VAPID keys | Only if the private key leaked. New pair on Vercel | Everyone must turn phone notifications on again |
 | `BACKUP_PASSPHRASE` | New value on GitHub | Older backups still need the old passphrase |
 
@@ -571,7 +587,8 @@ repository secrets: `PRUSPECT_URL`, `CRON_SECRET`, `BACKUP_DATABASE_URL`, `BACKU
 
 ## Known limitations
 
-- **Reminders are in-app and push only.** No email/SMS is sent; that needs an external provider.
+- **Reminders are in-app and push only.** Only error alerts are emailed (to admins); reminders by
+  email/SMS are not implemented.
 - **Teams are totals only.** A manager sees team members' counts, never their prospects; there is no
   record sharing or assignment.
 - **Stage list is fixed in code** (labels editable in `statuses.py`/`constants.ts`); sources and
