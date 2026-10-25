@@ -12,7 +12,6 @@ from django.utils import timezone
 from rest_framework import mixins, serializers, viewsets
 from rest_framework.decorators import action
 from rest_framework.exceptions import PermissionDenied, ValidationError
-from rest_framework.permissions import IsAdminUser
 from rest_framework.response import Response
 from rest_framework_simplejwt.token_blacklist.models import BlacklistedToken, OutstandingToken
 
@@ -20,6 +19,7 @@ from apps.audit.models import AuditAction
 from apps.audit.services import record
 
 from .models import User
+from .permissions import IsVerifiedAdmin
 
 
 class AdminUserSerializer(serializers.ModelSerializer):
@@ -53,7 +53,7 @@ class AdminUserSerializer(serializers.ModelSerializer):
 
 class AdminUserViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, viewsets.GenericViewSet):
     serializer_class = AdminUserSerializer
-    permission_classes = [IsAdminUser]
+    permission_classes = [IsVerifiedAdmin]
     filter_backends = []
 
     ORDERING = {

@@ -25,6 +25,7 @@ import { passwordSchema, setPasswordSchema, type PasswordValues } from '@/schema
 
 import { CalendarSyncCard } from './CalendarSyncCard'
 import { PushCard } from './PushCard'
+import { TwoFactorCard } from './TwoFactorCard'
 import { TemplatesTab } from './TemplatesTab'
 import { authService, prospectService, settingsService } from '@/services'
 import type { ProspectSource, UserSettings } from '@/types/api'
@@ -93,6 +94,7 @@ function ProfileTab() {
           <div className="flex justify-end"><Button type="submit" loading={changePw.isPending}>{hasPassword ? 'Change password' : 'Set password'}</Button></div>
         </form>
       </Card>
+      <TwoFactorCard />
     </div>
   )
 }

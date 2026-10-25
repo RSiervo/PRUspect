@@ -167,6 +167,8 @@ GOOGLE_ALLOWED_DOMAINS = [d.lower().lstrip("@") for d in env_list("GOOGLE_ALLOWE
 VAPID_PUBLIC_KEY = env("VAPID_PUBLIC_KEY", "").strip()
 VAPID_PRIVATE_KEY = env("VAPID_PRIVATE_KEY", "").strip()
 VAPID_SUBJECT = env("VAPID_SUBJECT", "mailto:admin@example.com").strip()
+# Admins must turn on two-step verification before using admin pages.
+ADMIN_REQUIRE_2FA = env_bool("ADMIN_REQUIRE_2FA", True)
 # Shared secret for the scheduler endpoint (/api/v1/cron/run/).
 CRON_SECRET = env("CRON_SECRET", "").strip()
 

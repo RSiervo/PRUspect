@@ -68,6 +68,9 @@ export interface User {
   google_linked: boolean
   manager: { id: number; full_name: string; email: string } | null
   team_size: number
+  two_factor_enabled: boolean
+  /** Admin accounts must turn on two-step verification to use admin pages. */
+  two_factor_required: boolean
 }
 
 export interface AuthConfig {
@@ -80,6 +83,24 @@ export interface AuthResponse {
   access: string
   user: User
   created?: boolean
+}
+
+/** Returned instead of a session when the account has two-step verification on. */
+export interface TwoFactorChallenge {
+  two_factor_required: true
+  challenge: string
+}
+
+export interface TwoFactorStatus {
+  enabled: boolean
+  required: boolean
+  recovery_codes_left: number
+}
+
+export interface TwoFactorSetup {
+  secret: string
+  otpauth_uri: string
+  qr_svg: string
 }
 
 export interface UserSettings {

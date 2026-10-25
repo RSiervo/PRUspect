@@ -1,12 +1,12 @@
 from rest_framework.test import APIClient
 
-from .helpers import ApiTestCase, make_prospect, make_user
+from .helpers import ApiTestCase, make_prospect, make_user, make_admin
 
 
 class TeamTests(ApiTestCase):
     def setUp(self):
         super().setUp()
-        self.admin = make_user("admin@example.com", is_staff=True)
+        self.admin = make_admin("admin@example.com")
         self.admin_client = APIClient()
         self.admin_client.force_authenticate(self.admin)
         # self.user will manage self.other

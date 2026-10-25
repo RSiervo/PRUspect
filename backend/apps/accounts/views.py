@@ -78,7 +78,15 @@ class LoginView(APIView):
         )
         if user is None or not user.is_active:
             return _error("Incorrect email or password.", "invalid_credentials", status.HTTP_401_UNAUTHORIZED)
+        if user.two_factor_enabled:
+            return _two_factor_challenge(user)
         return _signed_in_response(user)
+
+
+def _two_factor_challenge(user) -> Response:
+    from .two_factor import make_challenge
+
+    return Response({"two_factor_required": True, "challenge": make_challenge(user)})
 
 
 def _signed_in_response(user, http_status=status.HTTP_200_OK, **extra) -> Response:
@@ -122,6 +130,8 @@ class GoogleLoginView(APIView):
         except AuthenticationFailed as exc:
             return _error(str(exc.detail), "google_invalid", status.HTTP_401_UNAUTHORIZED)
         user, created = sign_in_with_google(identity)
+        if user.two_factor_enabled:
+            return _two_factor_challenge(user)
         return _signed_in_response(user, status.HTTP_201_CREATED if created else status.HTTP_200_OK, created=created)
 
 

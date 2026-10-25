@@ -4,16 +4,20 @@ import { refreshSession, setAccessToken, setSessionExpiredHandler } from '@/lib/
 import { setTimeZone } from '@/lib/datetime'
 import { queryClient } from '@/lib/queryKeys'
 import { authService } from '@/services'
-import type { User } from '@/types/api'
+import type { AuthResponse, TwoFactorChallenge, User } from '@/types/api'
 
 type Status = 'loading' | 'authenticated' | 'anonymous'
+
+/** A sign-in either finishes, or needs a code from the authenticator app first. */
+export type SignInResult = { twoFactor: false; created: boolean } | { twoFactor: true; challenge: string }
 
 interface AuthContextValue {
   status: Status
   user: User | null
-  login: (email: string, password: string) => Promise<void>
-  /** Returns true when this Google sign-in created a new account. */
-  loginWithGoogle: (credential: string) => Promise<boolean>
+  login: (email: string, password: string) => Promise<SignInResult>
+  /** `created` is true when this Google sign-in created a new account. */
+  loginWithGoogle: (credential: string) => Promise<SignInResult>
+  verifyTwoFactor: (challenge: string, code: string) => Promise<{ recoveryCodeUsed: boolean; recoveryCodesLeft: number }>
   logout: () => Promise<void>
   setUser: (user: User) => void
 }
@@ -58,21 +62,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => setSessionExpiredHandler(null)
   }, [clearSession])
 
-  const login = useCallback(
-    async (email: string, password: string) => {
-      const data = await authService.login(email, password)
+  const finish = useCallback(
+    (data: AuthResponse | TwoFactorChallenge): SignInResult => {
+      if ('two_factor_required' in data) return { twoFactor: true, challenge: data.challenge }
       setUser(data.user)
       setStatus('authenticated')
+      return { twoFactor: false, created: Boolean(data.created) }
     },
     [setUser],
   )
 
-  const loginWithGoogle = useCallback(
-    async (credential: string) => {
-      const data = await authService.google(credential)
+  const login = useCallback(async (email: string, password: string) => finish(await authService.login(email, password)), [finish])
+
+  const loginWithGoogle = useCallback(async (credential: string) => finish(await authService.google(credential)), [finish])
+
+  const verifyTwoFactor = useCallback(
+    async (challenge: string, code: string) => {
+      const data = await authService.verifyTwoFactor(challenge, code)
       setUser(data.user)
       setStatus('authenticated')
-      return Boolean(data.created)
+      return { recoveryCodeUsed: data.recovery_code_used, recoveryCodesLeft: data.recovery_codes_left }
     },
     [setUser],
   )
@@ -86,8 +95,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [clearSession])
 
   const value = useMemo(
-    () => ({ status, user, login, loginWithGoogle, logout, setUser }),
-    [status, user, login, loginWithGoogle, logout, setUser],
+    () => ({ status, user, login, loginWithGoogle, verifyTwoFactor, logout, setUser }),
+    [status, user, login, loginWithGoogle, verifyTwoFactor, logout, setUser],
   )
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 }

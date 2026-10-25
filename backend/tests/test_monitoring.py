@@ -6,13 +6,13 @@ from apps.monitoring.models import ErrorEvent
 from apps.monitoring.services import MAX_ALERTS_PER_HOUR, capture
 from apps.notifications.models import Notification, NotificationKind
 
-from .helpers import ApiTestCase, make_user
+from .helpers import ApiTestCase, make_user, make_admin
 
 
 class ErrorCaptureTests(ApiTestCase):
     def setUp(self):
         super().setUp()
-        self.admin = make_user("admin@example.com", is_staff=True)
+        self.admin = make_admin("admin@example.com")
         self.admin_client = APIClient()
         self.admin_client.force_authenticate(self.admin)
 

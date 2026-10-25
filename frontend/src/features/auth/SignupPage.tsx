@@ -29,7 +29,12 @@ export function SignupPage() {
     setError(null)
     setBusy(true)
     try {
-      const created = await loginWithGoogle(credential)
+      const result = await loginWithGoogle(credential)
+      if (result.twoFactor) {
+        navigate('/login', { replace: true, state: { challenge: result.challenge } })
+        return
+      }
+      const created = result.created
       toast.success(created ? 'Welcome to PRUspect!' : 'Welcome back!', {
         description: created ? 'Your account is ready. Add your first prospect to get started.' : 'You already had an account, so we signed you in.',
       })

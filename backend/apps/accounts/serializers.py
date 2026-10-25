@@ -13,12 +13,20 @@ class UserSerializer(serializers.ModelSerializer):
     google_linked = serializers.SerializerMethodField()
     manager = serializers.SerializerMethodField()
     team_size = serializers.SerializerMethodField()
+    two_factor_enabled = serializers.BooleanField(read_only=True)
+    two_factor_required = serializers.SerializerMethodField()
 
     class Meta:
         model = User
         fields = ["id", "email", "first_name", "last_name", "full_name", "job_title", "time_zone", "date_joined",
-                  "is_staff", "has_password", "google_linked", "manager", "team_size"]
+                  "is_staff", "has_password", "google_linked", "manager", "team_size", "two_factor_enabled",
+                  "two_factor_required"]
         read_only_fields = ["id", "email", "date_joined", "is_staff"]
+
+    def get_two_factor_required(self, obj) -> bool:
+        from .two_factor import is_required
+
+        return is_required(obj)
 
     def get_has_password(self, obj) -> bool:
         return obj.has_usable_password()

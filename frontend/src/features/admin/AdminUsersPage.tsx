@@ -12,6 +12,7 @@ import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 import { Input, Select } from '@/components/ui/input'
 import { Badge } from '@/components/ui/misc'
 import { useAuth } from '@/features/auth/AuthProvider'
+import { needsTwoFactor, TwoFactorGate } from '@/features/admin/TwoFactorGate'
 import { useDebouncedValue, useQueryState } from '@/hooks'
 import { errorMessage } from '@/lib/api'
 import { formatDateTime, timeAgo } from '@/lib/datetime'
@@ -71,7 +72,7 @@ export function AdminUsersPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [debounced])
 
-  const isAdmin = Boolean(me?.is_staff)
+  const isAdmin = Boolean(me?.is_staff) && !needsTwoFactor(me)
   const params = { search: filters.search, status: filters.status, method: filters.method, ordering: filters.ordering, page: Number(filters.page) || 1, page_size: PAGE_SIZE }
   const summary = useQuery({ queryKey: ['admin-users', 'summary'], queryFn: adminService.summary, enabled: isAdmin })
   const list = useQuery({
@@ -93,6 +94,7 @@ export function AdminUsersPage() {
     onError: (e) => toast.error(errorMessage(e)),
   })
 
+  if (me?.is_staff && needsTwoFactor(me)) return <TwoFactorGate />
   if (!isAdmin) {
     return (
       <div className="card">

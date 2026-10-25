@@ -11,6 +11,7 @@ import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 import { Select } from '@/components/ui/input'
 import { Badge } from '@/components/ui/misc'
 import { useAuth } from '@/features/auth/AuthProvider'
+import { needsTwoFactor, TwoFactorGate } from '@/features/admin/TwoFactorGate'
 import { useQueryState } from '@/hooks'
 import { errorMessage } from '@/lib/api'
 import { formatDateTime, timeAgo } from '@/lib/datetime'
@@ -86,7 +87,7 @@ export function AdminSystemPage() {
   const { user: me } = useAuth()
   const [filters, update] = useQueryState(DEFAULTS)
   const [confirmAll, setConfirmAll] = useState(false)
-  const isAdmin = Boolean(me?.is_staff)
+  const isAdmin = Boolean(me?.is_staff) && !needsTwoFactor(me)
   const params = { status: filters.status, source: filters.source, page: Number(filters.page) || 1, page_size: PAGE_SIZE }
   const summary = useQuery({ queryKey: ['admin-errors', 'summary'], queryFn: errorService.summary, enabled: isAdmin, refetchInterval: 60_000 })
   const list = useQuery({ queryKey: ['admin-errors', 'list', params], queryFn: () => errorService.list(params), enabled: isAdmin, placeholderData: keepPreviousData, refetchInterval: 60_000 })
@@ -110,6 +111,7 @@ export function AdminSystemPage() {
     onError: (e) => toast.error(errorMessage(e)),
   })
 
+  if (me?.is_staff && needsTwoFactor(me)) return <TwoFactorGate />
   if (!isAdmin) {
     return (
       <div className="card">

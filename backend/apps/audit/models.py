@@ -29,6 +29,9 @@ class AuditAction(models.TextChoices):
     USER_DEACTIVATED = "admin.user_deactivated", "Account deactivated"
     USER_REACTIVATED = "admin.user_reactivated", "Account reactivated"
     DEMO_DATA_REMOVED = "data.demo_removed", "Demo data removed"
+    TWO_FACTOR_ENABLED = "auth.2fa_enabled", "Two-step verification turned on"
+    TWO_FACTOR_DISABLED = "auth.2fa_disabled", "Two-step verification turned off"
+    RECOVERY_CODES_RENEWED = "auth.recovery_codes", "Recovery codes replaced"
 
 
 class AuditLog(models.Model):

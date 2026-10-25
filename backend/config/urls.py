@@ -9,6 +9,7 @@ from apps.accounts.team_views import TeamView
 from apps.activities import views as activities
 from apps.dashboard import views as dashboard
 from apps.notifications import views as notification_views
+from apps.accounts import two_factor_views
 from apps.monitoring.views import ClientErrorReportView, ErrorEventViewSet
 from apps.notifications.cron_views import CronRunView
 from apps.notifications.views import NotificationViewSet
@@ -38,6 +39,12 @@ api_v1 = [
     path("auth/logout/", accounts.LogoutView.as_view(), name="auth-logout"),
     path("auth/me/", accounts.MeView.as_view(), name="auth-me"),
     path("auth/change-password/", accounts.ChangePasswordView.as_view(), name="auth-change-password"),
+    path("auth/2fa/", two_factor_views.TwoFactorStatusView.as_view(), name="2fa-status"),
+    path("auth/2fa/setup/", two_factor_views.TwoFactorSetupView.as_view(), name="2fa-setup"),
+    path("auth/2fa/confirm/", two_factor_views.TwoFactorConfirmView.as_view(), name="2fa-confirm"),
+    path("auth/2fa/disable/", two_factor_views.TwoFactorDisableView.as_view(), name="2fa-disable"),
+    path("auth/2fa/recovery-codes/", two_factor_views.RecoveryCodesView.as_view(), name="2fa-recovery-codes"),
+    path("auth/2fa/verify/", two_factor_views.TwoFactorVerifyView.as_view(), name="2fa-verify"),
     path("team/", TeamView.as_view(), name="team"),
     path("settings/", accounts.SettingsView.as_view(), name="settings"),
     path("settings/demo-data/", prospects.DemoDataView.as_view(), name="settings-demo-data"),

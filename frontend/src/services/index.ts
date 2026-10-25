@@ -7,6 +7,9 @@ import type {
   AdminUserSummary,
   ErrorEvent,
   ErrorSummary,
+  TwoFactorChallenge,
+  TwoFactorSetup,
+  TwoFactorStatus,
   AuthConfig,
   AuthResponse,
   CalendarEvent,
@@ -57,14 +60,24 @@ export const authService = {
   config: () => request<AuthConfig>('/auth/config/', { auth: false }),
   /** Exchange a Google ID token for a session; creates the account on first use. */
   async google(credential: string) {
-    const data = await request<AuthResponse>('/auth/google/', { method: 'POST', body: { credential }, auth: false })
-    setAccessToken(data.access)
+    const data = await request<AuthResponse | TwoFactorChallenge>('/auth/google/', { method: 'POST', body: { credential }, auth: false })
+    if ('access' in data) setAccessToken(data.access)
     return data
   },
   async login(email: string, password: string) {
-    const data = await request<AuthResponse>('/auth/login/', {
+    const data = await request<AuthResponse | TwoFactorChallenge>('/auth/login/', {
       method: 'POST',
       body: { email, password },
+      auth: false,
+    })
+    if ('access' in data) setAccessToken(data.access)
+    return data
+  },
+  /** Second sign-in step for accounts with two-step verification. */
+  async verifyTwoFactor(challenge: string, code: string) {
+    const data = await request<AuthResponse & { recovery_code_used: boolean; recovery_codes_left: number }>('/auth/2fa/verify/', {
+      method: 'POST',
+      body: { challenge, code },
       auth: false,
     })
     setAccessToken(data.access)
@@ -247,6 +260,14 @@ export const errorService = {
   reopen: (id: number) => api.post<ErrorEvent>(`/admin/errors/${id}/reopen/`),
   resolveAll: () => api.post<{ resolved: number }>('/admin/errors/resolve-all/'),
   testAlert: () => api.post<{ id: number }>('/admin/errors/test-alert/'),
+}
+
+export const twoFactorService = {
+  status: () => api.get<TwoFactorStatus>('/auth/2fa/'),
+  setup: () => api.post<TwoFactorSetup>('/auth/2fa/setup/'),
+  confirm: (code: string) => api.post<{ enabled: true; recovery_codes: string[] }>('/auth/2fa/confirm/', { code }),
+  disable: (code: string) => api.post<{ enabled: false }>('/auth/2fa/disable/', { code }),
+  recoveryCodes: (code: string) => api.post<{ recovery_codes: string[] }>('/auth/2fa/recovery-codes/', { code }),
 }
 
 export const teamService = {

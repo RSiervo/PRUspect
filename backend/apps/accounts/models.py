@@ -43,6 +43,11 @@ class User(AbstractBaseUser, PermissionsMixin):
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
     date_joined = models.DateTimeField(default=timezone.now)
+    # Two-step verification (authenticator app). See accounts/two_factor.py.
+    totp_secret = models.CharField(max_length=64, blank=True, editable=False)
+    totp_enabled_at = models.DateTimeField(null=True, blank=True, editable=False)
+    totp_last_step = models.BigIntegerField(default=0, editable=False)
+    recovery_codes = models.JSONField(default=list, blank=True, editable=False)
 
     objects = UserManager()
 
@@ -55,6 +60,10 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     def __str__(self) -> str:
         return self.email
+
+    @property
+    def two_factor_enabled(self) -> bool:
+        return bool(self.totp_enabled_at and self.totp_secret)
 
     @property
     def full_name(self) -> str:

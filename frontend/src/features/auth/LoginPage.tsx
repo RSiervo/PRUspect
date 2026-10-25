@@ -14,6 +14,7 @@ import { loginSchema, type LoginValues } from '@/schemas'
 import { AuthLayout, OrDivider } from './AuthLayout'
 import { useAuth } from './AuthProvider'
 import { GoogleButton, useAuthConfig } from './GoogleButton'
+import { TwoFactorStep } from './TwoFactorStep'
 
 function friendlyError(error: unknown) {
   return error instanceof ApiError && error.code === 'throttled'
@@ -29,7 +30,9 @@ export function LoginPage() {
   const [showPassword, setShowPassword] = useState(false)
   const [formError, setFormError] = useState<string | null>(null)
   const [googleBusy, setGoogleBusy] = useState(false)
-  const from = (location.state as { from?: string } | null)?.from ?? '/'
+  const state = location.state as { from?: string; challenge?: string } | null
+  const from = state?.from ?? '/'
+  const [challenge, setChallenge] = useState<string | null>(state?.challenge ?? null)
 
   const {
     register,
@@ -39,11 +42,27 @@ export function LoginPage() {
 
   if (status === 'authenticated') return <Navigate to={from} replace />
 
+  if (challenge) {
+    return (
+      <AuthLayout mobileTitle="Two-step verification" mobileSubtitle="One more step to keep your account safe.">
+        <TwoFactorStep
+          challenge={challenge}
+          onSignedIn={() => navigate(from, { replace: true })}
+          onCancel={(message) => {
+            setChallenge(null)
+            setFormError(message ?? null)
+          }}
+        />
+      </AuthLayout>
+    )
+  }
+
   const onSubmit = handleSubmit(async (values) => {
     setFormError(null)
     try {
-      await login(values.email, values.password)
-      navigate(from, { replace: true })
+      const result = await login(values.email, values.password)
+      if (result.twoFactor) setChallenge(result.challenge)
+      else navigate(from, { replace: true })
     } catch (error) {
       setFormError(friendlyError(error))
     }
@@ -53,8 +72,12 @@ export function LoginPage() {
     setFormError(null)
     setGoogleBusy(true)
     try {
-      const created = await loginWithGoogle(credential)
-      if (created) toast.success('Welcome to PRUspect!', { description: 'Your account is ready.' })
+      const result = await loginWithGoogle(credential)
+      if (result.twoFactor) {
+        setChallenge(result.challenge)
+        return
+      }
+      if (result.created) toast.success('Welcome to PRUspect!', { description: 'Your account is ready.' })
       navigate(from, { replace: true })
     } catch (error) {
       setFormError(friendlyError(error))

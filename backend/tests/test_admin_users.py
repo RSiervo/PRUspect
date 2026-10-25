@@ -3,14 +3,14 @@ from rest_framework.test import APIClient, APITestCase
 
 from apps.audit.models import AuditAction, AuditLog
 
-from .helpers import PASSWORD, make_prospect, make_user
+from .helpers import PASSWORD, make_prospect, make_user, make_admin
 
 AJAX = {"HTTP_X_REQUESTED_WITH": "XMLHttpRequest"}
 
 
 class AdminUsersTests(APITestCase):
     def setUp(self):
-        self.admin = make_user("admin@example.com", is_staff=True)
+        self.admin = make_admin("admin@example.com")
         self.member = make_user("member@example.com")
         make_prospect(self.member, first_name="Secret", last_name="Client")
         self.admin_client = APIClient()
@@ -69,7 +69,7 @@ class AdminUsersTests(APITestCase):
         self.assertEqual(response.status_code, 400)
 
     def test_only_superusers_can_change_superusers(self):
-        boss = make_user("boss@example.com", is_staff=True, is_superuser=True)
+        boss = make_admin("boss@example.com", is_superuser=True)
         self.assertEqual(self.admin_client.post(f"/api/v1/admin/users/{boss.pk}/deactivate/").status_code, 403)
 
     def test_me_reports_admin_flag(self):

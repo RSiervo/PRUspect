@@ -4,10 +4,12 @@ from django.db.models import Sum
 from django.utils import timezone
 from rest_framework import mixins, serializers, viewsets
 from rest_framework.decorators import action
-from rest_framework.permissions import AllowAny, IsAdminUser
+from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.throttling import ScopedRateThrottle
 from rest_framework.views import APIView
+
+from apps.accounts.permissions import IsVerifiedAdmin
 
 from .models import ErrorEvent, ErrorSource
 from .services import capture
@@ -51,7 +53,7 @@ class ErrorEventSerializer(serializers.ModelSerializer):
 
 
 class ErrorEventViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, viewsets.GenericViewSet):
-    permission_classes = [IsAdminUser]
+    permission_classes = [IsVerifiedAdmin]
     serializer_class = ErrorEventSerializer
 
     def get_queryset(self):

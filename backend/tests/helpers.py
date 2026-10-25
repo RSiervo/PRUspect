@@ -35,3 +35,8 @@ class ApiTestCase(APITestCase):
         self.client.force_authenticate(self.user)
         self.other_client = APIClient()
         self.other_client.force_authenticate(self.other)
+
+
+def make_admin(email="admin@example.com", **extra):
+    """Admin with two-step verification already on (required for admin pages)."""
+    return make_user(email, is_staff=True, totp_secret="JBSWY3DPEHPK3PXP", totp_enabled_at=timezone.now(), **extra)

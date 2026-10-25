@@ -15,4 +15,7 @@ cryptography>=44
 openpyxl>=3.1,<4
 # Phone/desktop push notifications
 pywebpush>=2.0,<3
+# Two-step verification (authenticator app) and its QR code
+pyotp>=2.9,<3
+segno>=1.6,<2
 gunicorn>=23,<24; sys_platform != "win32"
