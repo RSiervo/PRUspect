@@ -150,6 +150,9 @@ Backend (`backend/.env`, see `backend/.env.example`):
 | `DEFAULT_TIME_ZONE` | Default display timezone for new users (`Asia/Manila`) |
 | `THROTTLE_LOGIN` / `THROTTLE_REFRESH` | Rate limits for auth endpoints |
 | `REDIS_URL` | Production: shared cache so rate limits apply across workers |
+| `GOOGLE_CLIENT_ID` | Enables "Continue with Google" (OAuth Web client ID). Unset = button hidden |
+| `GOOGLE_SIGNUP_ENABLED` | `True` lets new people create accounts with Google (default `True`) |
+| `GOOGLE_ALLOWED_DOMAINS` | Optional comma list limiting Google sign-up to these email domains |
 
 Frontend (`frontend/.env.local`, optional): `VITE_API_BASE_URL` (default `/api/v1`), `VITE_DEV_API_PROXY`.
 Nothing secret belongs in frontend env files.
@@ -158,7 +161,19 @@ Nothing secret belongs in frontend env files.
 
 ## Creating the first user and demo data
 
-Public registration is disabled. Create accounts from the server:
+**Google sign-up:** when `GOOGLE_CLIENT_ID` is set, the login page shows *Continue with Google* and
+`/signup` lets new people create an account with their Google account. The API verifies Google's ID token
+(signature, audience, expiry, verified email). A Google email that matches an existing account signs into
+that account (it is linked, not duplicated). Each new account starts empty and private. Google-only users
+can add a password later in *Settings → Profile & security*. Set `GOOGLE_SIGNUP_ENABLED=False` to close
+sign-ups, or `GOOGLE_ALLOWED_DOMAINS` to restrict them.
+
+To create the Google client: Google Cloud Console → *APIs & Services → Credentials → Create credentials →
+OAuth client ID → Web application*. Authorized JavaScript origins: `https://pruspect.vercel.app` (and
+`http://localhost:5799` for local testing). No redirect URI is needed. Configure the *OAuth consent screen*
+(app name, support email) and publish it so any Google user can sign in.
+
+**Email/password accounts** are created from the server:
 
 ```bash
 python manage.py createsuperuser          # prompts for email, name, password

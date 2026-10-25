@@ -36,6 +36,8 @@ class User(AbstractBaseUser, PermissionsMixin):
     first_name = models.CharField(max_length=80, blank=True)
     last_name = models.CharField(max_length=80, blank=True)
     job_title = models.CharField(max_length=120, blank=True, default="Financial Advisor")
+    # Google account subject id ("sub" claim) once the user signs in with Google.
+    google_sub = models.CharField(max_length=255, unique=True, null=True, blank=True, editable=False)
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
     date_joined = models.DateTimeField(default=timezone.now)

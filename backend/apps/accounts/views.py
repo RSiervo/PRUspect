@@ -17,7 +17,7 @@ from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.throttling import ScopedRateThrottle
 from rest_framework.views import APIView
-from rest_framework.exceptions import ValidationError
+from rest_framework.exceptions import AuthenticationFailed, ValidationError
 from rest_framework_simplejwt.exceptions import InvalidToken, TokenError
 from rest_framework_simplejwt.serializers import TokenRefreshSerializer
 from rest_framework_simplejwt.token_blacklist.models import BlacklistedToken, OutstandingToken
@@ -26,8 +26,15 @@ from rest_framework_simplejwt.tokens import AccessToken, RefreshToken
 from apps.audit.models import AuditAction
 from apps.audit.services import diff, record
 
+from .google import GoogleNotConfigured, sign_in_with_google, verify_credential
 from .models import User, UserSettings
-from .serializers import ChangePasswordSerializer, LoginSerializer, UserSerializer, UserSettingsSerializer
+from .serializers import (
+    ChangePasswordSerializer,
+    GoogleLoginSerializer,
+    LoginSerializer,
+    UserSerializer,
+    UserSettingsSerializer,
+)
 
 
 def _set_refresh_cookie(response: Response, token: str) -> None:
@@ -71,11 +78,51 @@ class LoginView(APIView):
         )
         if user is None or not user.is_active:
             return _error("Incorrect email or password.", "invalid_credentials", status.HTTP_401_UNAUTHORIZED)
-        refresh = RefreshToken.for_user(user)
-        update_last_login(None, user)
-        response = Response({"access": str(refresh.access_token), "user": UserSerializer(user).data})
-        _set_refresh_cookie(response, str(refresh))
-        return response
+        return _signed_in_response(user)
+
+
+def _signed_in_response(user, http_status=status.HTTP_200_OK, **extra) -> Response:
+    refresh = RefreshToken.for_user(user)
+    update_last_login(None, user)
+    response = Response({"access": str(refresh.access_token), "user": UserSerializer(user).data, **extra},
+                        status=http_status)
+    _set_refresh_cookie(response, str(refresh))
+    return response
+
+
+class AuthConfigView(APIView):
+    """Public: which sign-in methods the login page should offer."""
+
+    permission_classes = [AllowAny]
+    authentication_classes = []
+
+    def get(self, request):
+        return Response({
+            "google_client_id": settings.GOOGLE_CLIENT_ID or None,
+            "google_signup_enabled": bool(settings.GOOGLE_CLIENT_ID) and settings.GOOGLE_SIGNUP_ENABLED,
+            "google_allowed_domains": settings.GOOGLE_ALLOWED_DOMAINS,
+        })
+
+
+class GoogleLoginView(APIView):
+    """Exchange a Google ID token for a PRUspect session (signs up on first use)."""
+
+    permission_classes = [AllowAny]
+    authentication_classes = []
+    throttle_classes = [ScopedRateThrottle]
+    throttle_scope = "auth_login"
+
+    def post(self, request):
+        serializer = GoogleLoginSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        try:
+            identity = verify_credential(serializer.validated_data["credential"])
+        except GoogleNotConfigured:
+            return _error("Google sign-in isn't set up on this server.", "google_disabled", status.HTTP_404_NOT_FOUND)
+        except AuthenticationFailed as exc:
+            return _error(str(exc.detail), "google_invalid", status.HTTP_401_UNAUTHORIZED)
+        user, created = sign_in_with_google(identity)
+        return _signed_in_response(user, status.HTTP_201_CREATED if created else status.HTTP_200_OK, created=created)
 
 
 class RefreshView(APIView):

@@ -151,9 +151,14 @@ CORS_ALLOWED_ORIGINS = env_list("CORS_ALLOWED_ORIGINS")
 CORS_ALLOW_CREDENTIALS = True
 CSRF_TRUSTED_ORIGINS = env_list("CSRF_TRUSTED_ORIGINS")
 
-# Public sign-up is disabled. The first user is created with
-# `python manage.py createsuperuser` (see README).
-ALLOW_REGISTRATION = False
+# Email/password accounts are created by an administrator (`createsuperuser`).
+# Google sign-in: set GOOGLE_CLIENT_ID (OAuth "Web application" client) to show the
+# "Continue with Google" button. New Google users get their own empty account unless
+# GOOGLE_SIGNUP_ENABLED=False; GOOGLE_ALLOWED_DOMAINS limits sign-up to listed email
+# domains (e.g. "gmail.com,yourcompany.com"; empty = any verified Google account).
+GOOGLE_CLIENT_ID = env("GOOGLE_CLIENT_ID", "").strip()
+GOOGLE_SIGNUP_ENABLED = env_bool("GOOGLE_SIGNUP_ENABLED", True)
+GOOGLE_ALLOWED_DOMAINS = [d.lower().lstrip("@") for d in env_list("GOOGLE_ALLOWED_DOMAINS")]
 
 CACHES = {"default": {"BACKEND": "django.core.cache.backends.locmem.LocMemCache"}}
 

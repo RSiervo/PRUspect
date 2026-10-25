@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button'
 import { ActivitiesPage } from '@/features/activities/ActivitiesPage'
 import { LoginPage } from '@/features/auth/LoginPage'
 import { RequireAuth } from '@/features/auth/RequireAuth'
+import { SignupPage } from '@/features/auth/SignupPage'
 import { CalendarPage } from '@/features/calendar/CalendarPage'
 import { DashboardPage } from '@/features/dashboard/DashboardPage'
 import { FollowUpsPage } from '@/features/follow-ups/FollowUpsPage'
@@ -36,6 +37,7 @@ function NotFound() {
 
 export const routes = [
   { path: '/login', element: <LoginPage /> },
+  { path: '/signup', element: <SignupPage /> },
   {
     element: <RequireAuth />,
     children: [

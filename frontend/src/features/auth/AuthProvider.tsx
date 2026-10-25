@@ -12,6 +12,8 @@ interface AuthContextValue {
   status: Status
   user: User | null
   login: (email: string, password: string) => Promise<void>
+  /** Returns true when this Google sign-in created a new account. */
+  loginWithGoogle: (credential: string) => Promise<boolean>
   logout: () => Promise<void>
   setUser: (user: User) => void
 }
@@ -65,6 +67,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     [setUser],
   )
 
+  const loginWithGoogle = useCallback(
+    async (credential: string) => {
+      const data = await authService.google(credential)
+      setUser(data.user)
+      setStatus('authenticated')
+      return Boolean(data.created)
+    },
+    [setUser],
+  )
+
   const logout = useCallback(async () => {
     try {
       await authService.logout()
@@ -73,7 +85,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, [clearSession])
 
-  const value = useMemo(() => ({ status, user, login, logout, setUser }), [status, user, login, logout, setUser])
+  const value = useMemo(
+    () => ({ status, user, login, loginWithGoogle, logout, setUser }),
+    [status, user, login, loginWithGoogle, logout, setUser],
+  )
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 }
 

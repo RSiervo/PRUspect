@@ -9,12 +9,20 @@ from .models import User, UserSettings
 class UserSerializer(serializers.ModelSerializer):
     full_name = serializers.CharField(read_only=True)
     time_zone = serializers.CharField(source="settings.time_zone", read_only=True)
+    has_password = serializers.SerializerMethodField()
+    google_linked = serializers.SerializerMethodField()
 
     class Meta:
         model = User
         fields = ["id", "email", "first_name", "last_name", "full_name", "job_title", "time_zone", "date_joined",
-                  "is_staff"]
+                  "is_staff", "has_password", "google_linked"]
         read_only_fields = ["id", "email", "date_joined", "is_staff"]
+
+    def get_has_password(self, obj) -> bool:
+        return obj.has_usable_password()
+
+    def get_google_linked(self, obj) -> bool:
+        return bool(obj.google_sub)
 
 
 class LoginSerializer(serializers.Serializer):
@@ -22,12 +30,19 @@ class LoginSerializer(serializers.Serializer):
     password = serializers.CharField(trim_whitespace=False, write_only=True)
 
 
+class GoogleLoginSerializer(serializers.Serializer):
+    credential = serializers.CharField(max_length=4096, trim_whitespace=True)
+
+
 class ChangePasswordSerializer(serializers.Serializer):
-    current_password = serializers.CharField(trim_whitespace=False)
+    """Google-only accounts (no usable password yet) may set one without a current password."""
+
+    current_password = serializers.CharField(trim_whitespace=False, required=False, allow_blank=True, default="")
     new_password = serializers.CharField(trim_whitespace=False)
 
     def validate_current_password(self, value):
-        if not self.context["request"].user.check_password(value):
+        user = self.context["request"].user
+        if user.has_usable_password() and not user.check_password(value):
             raise serializers.ValidationError("Current password is incorrect.")
         return value
 

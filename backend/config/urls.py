@@ -23,7 +23,9 @@ router.register("settings/sources", prospects.ProspectSourceViewSet, basename="s
 router.register("settings/product-categories", prospects.ProductCategoryViewSet, basename="product-category")
 
 api_v1 = [
+    path("auth/config/", accounts.AuthConfigView.as_view(), name="auth-config"),
     path("auth/login/", accounts.LoginView.as_view(), name="auth-login"),
+    path("auth/google/", accounts.GoogleLoginView.as_view(), name="auth-google"),
     path("auth/refresh/", accounts.RefreshView.as_view(), name="auth-refresh"),
     path("auth/logout/", accounts.LogoutView.as_view(), name="auth-logout"),
     path("auth/me/", accounts.MeView.as_view(), name="auth-me"),

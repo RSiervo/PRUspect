@@ -23,6 +23,8 @@ class AuditAction(models.TextChoices):
     EXPORT = "data.exported", "Data exported"
     SETTINGS_CHANGED = "settings.changed", "Settings changed"
     PASSWORD_CHANGED = "auth.password_changed", "Password changed"
+    SIGNED_UP_GOOGLE = "auth.signup_google", "Signed up with Google"
+    GOOGLE_LINKED = "auth.google_linked", "Google account linked"
     DEMO_DATA_REMOVED = "data.demo_removed", "Demo data removed"
 
 

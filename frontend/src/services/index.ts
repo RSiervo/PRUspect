@@ -3,6 +3,7 @@ import type {
   Activity,
   ActivityFeed,
   ActivityReport,
+  AuthConfig,
   AuthResponse,
   CalendarEvent,
   ConversionData,
@@ -39,6 +40,13 @@ export type ListParams = Record<string, string | number | boolean | undefined | 
 
 // ------------------------------------------------------------------ auth
 export const authService = {
+  config: () => request<AuthConfig>('/auth/config/', { auth: false }),
+  /** Exchange a Google ID token for a session; creates the account on first use. */
+  async google(credential: string) {
+    const data = await request<AuthResponse>('/auth/google/', { method: 'POST', body: { credential }, auth: false })
+    setAccessToken(data.access)
+    return data
+  },
   async login(email: string, password: string) {
     const data = await request<AuthResponse>('/auth/login/', {
       method: 'POST',

@@ -19,7 +19,7 @@ import { REMINDER_OPTIONS } from '@/lib/constants'
 import { COMMON_TIME_ZONES, setTimeZone } from '@/lib/datetime'
 import { applyServerErrors } from '@/lib/forms'
 import { invalidateCrm, qk } from '@/lib/queryKeys'
-import { passwordSchema, type PasswordValues } from '@/schemas'
+import { passwordSchema, setPasswordSchema, type PasswordValues } from '@/schemas'
 import { authService, prospectService, settingsService } from '@/services'
 import type { ProspectSource, UserSettings } from '@/types/api'
 
@@ -34,12 +34,19 @@ function ProfileTab() {
     },
     onError: (e) => toast.error(errorMessage(e)),
   })
-  const pw = useForm<PasswordValues>({ resolver: zodResolver(passwordSchema), defaultValues: { current_password: '', new_password: '', confirm_password: '' } })
+  const hasPassword = user?.has_password ?? true
+  const pw = useForm<PasswordValues>({
+    resolver: zodResolver(hasPassword ? passwordSchema : setPasswordSchema),
+    defaultValues: { current_password: '', new_password: '', confirm_password: '' },
+  })
   const changePw = useMutation({
     mutationFn: (v: PasswordValues) => authService.changePassword(v.current_password, v.new_password),
     onSuccess: () => {
-      toast.success('Password changed', { description: 'Other signed-in sessions were signed out.' })
+      toast.success(hasPassword ? 'Password changed' : 'Password set', {
+        description: hasPassword ? 'Other signed-in sessions were signed out.' : 'You can now also sign in with your email and password.',
+      })
       pw.reset()
+      if (user && !hasPassword) setUser({ ...user, has_password: true })
     },
     onError: (e) => applyServerErrors(e, pw.setError, {}, ['current_password', 'new_password']),
   })
@@ -47,7 +54,11 @@ function ProfileTab() {
   return (
     <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
       <Card>
-        <CardHeader title="Profile" description={user?.email} />
+        <CardHeader
+          title="Profile"
+          description={user?.email}
+          action={user?.google_linked ? <span className="rounded-full bg-sky-50 px-2.5 py-1 text-xs font-medium text-sky-800 ring-1 ring-sky-200">Signed in with Google</span> : undefined}
+        />
         <form className="grid gap-4 p-5" onSubmit={(e) => { e.preventDefault(); save.mutate() }}>
           <div className="grid grid-cols-2 gap-3">
             <FormField label="First name"><Input value={form.first_name} onChange={(e) => setForm({ ...form, first_name: e.target.value })} /></FormField>
@@ -58,12 +69,17 @@ function ProfileTab() {
         </form>
       </Card>
       <Card>
-        <CardHeader title="Change password" description="At least 10 characters. Avoid common passwords." />
+        <CardHeader
+          title={hasPassword ? 'Change password' : 'Set a password'}
+          description={hasPassword ? 'At least 10 characters. Avoid common passwords.' : 'Optional: lets you sign in with email and password as well as Google.'}
+        />
         <form className="grid gap-4 p-5" onSubmit={pw.handleSubmit((v) => changePw.mutate(v))} noValidate>
-          <FormField label="Current password" error={pw.formState.errors.current_password?.message}><Input type="password" autoComplete="current-password" {...pw.register('current_password')} /></FormField>
+          {hasPassword && (
+            <FormField label="Current password" error={pw.formState.errors.current_password?.message}><Input type="password" autoComplete="current-password" {...pw.register('current_password')} /></FormField>
+          )}
           <FormField label="New password" error={pw.formState.errors.new_password?.message}><Input type="password" autoComplete="new-password" {...pw.register('new_password')} /></FormField>
           <FormField label="Confirm new password" error={pw.formState.errors.confirm_password?.message}><Input type="password" autoComplete="new-password" {...pw.register('confirm_password')} /></FormField>
-          <div className="flex justify-end"><Button type="submit" loading={changePw.isPending}>Change password</Button></div>
+          <div className="flex justify-end"><Button type="submit" loading={changePw.isPending}>{hasPassword ? 'Change password' : 'Set password'}</Button></div>
         </form>
       </Card>
     </div>

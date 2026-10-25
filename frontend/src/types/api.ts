@@ -64,11 +64,20 @@ export interface User {
   time_zone: string
   date_joined: string
   is_staff: boolean
+  has_password: boolean
+  google_linked: boolean
+}
+
+export interface AuthConfig {
+  google_client_id: string | null
+  google_signup_enabled: boolean
+  google_allowed_domains: string[]
 }
 
 export interface AuthResponse {
   access: string
   user: User
+  created?: boolean
 }
 
 export interface UserSettings {

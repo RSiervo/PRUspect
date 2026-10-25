@@ -180,3 +180,12 @@ export const passwordSchema = z
     message: 'Passwords do not match.',
   })
 export type PasswordValues = z.infer<typeof passwordSchema>
+
+/** For Google-only accounts that have never had a password. */
+export const setPasswordSchema = z
+  .object({
+    current_password: z.string(),
+    new_password: z.string().min(10, 'Use at least 10 characters.'),
+    confirm_password: z.string(),
+  })
+  .refine((v) => v.new_password === v.confirm_password, { path: ['confirm_password'], message: 'Passwords do not match.' })
