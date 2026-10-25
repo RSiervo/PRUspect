@@ -91,6 +91,10 @@ class Prospect(TimeStampedModel):
     # Qualification.
     source = models.ForeignKey(ProspectSource, on_delete=models.SET_NULL, null=True, blank=True, related_name="+")
     referral_name = models.CharField(max_length=120, blank=True)
+    # Link to the prospect/client who referred this person (same owner).
+    referred_by = models.ForeignKey(
+        "self", on_delete=models.SET_NULL, null=True, blank=True, related_name="referrals"
+    )
     insurance_interests = models.ManyToManyField(ProductCategory, blank=True, related_name="prospects")
     existing_coverage = models.CharField(max_length=255, blank=True)
     budget_range = models.CharField(max_length=16, choices=BudgetRange.choices, blank=True)

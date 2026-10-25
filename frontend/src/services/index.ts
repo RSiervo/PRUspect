@@ -21,6 +21,8 @@ import type {
   FollowUp,
   FollowUpInput,
   FollowUpSummary,
+  GoalField,
+  GoalProgress,
   NotificationItem,
   NotificationPage,
   Opportunity,
@@ -240,4 +242,10 @@ export const templateService = {
   create: (data: Partial<MessageTemplate>) => api.post<MessageTemplate>('/settings/message-templates/', data),
   update: (id: number, data: Partial<MessageTemplate>) => api.patch<MessageTemplate>(`/settings/message-templates/${id}/`, data),
   remove: (id: number) => api.delete(`/settings/message-templates/${id}/`),
+}
+
+// ------------------------------------------------------------------ goals
+export const goalService = {
+  current: () => api.get<GoalProgress>('/goals/current/'),
+  save: (targets: Partial<Record<GoalField, number | string | null>>) => request<GoalProgress>('/goals/current/', { method: 'PUT', body: targets }),
 }

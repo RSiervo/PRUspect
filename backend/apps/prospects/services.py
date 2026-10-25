@@ -23,7 +23,7 @@ TRACKED_FIELDS = [
     "first_name", "last_name", "preferred_name", "mobile", "email", "birth_date", "occupation",
     "company", "location", "source", "referral_name", "existing_coverage", "budget_range",
     "priority", "notes", "consent_obtained", "consent_date", "consent_source",
-    "preferred_contact_method", "do_not_contact",
+    "preferred_contact_method", "do_not_contact", "referred_by",
 ]
 
 
@@ -45,6 +45,7 @@ def _stamp_milestones(prospect: Prospect, status: str, when) -> list[str]:
 def _snapshot(prospect: Prospect) -> dict:
     data = {field: getattr(prospect, field) for field in TRACKED_FIELDS}
     data["source"] = prospect.source_id
+    data["referred_by"] = prospect.referred_by_id
     return data
 
 

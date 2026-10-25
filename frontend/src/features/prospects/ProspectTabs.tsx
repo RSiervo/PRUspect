@@ -15,6 +15,7 @@ import {
   UserPlus,
 } from 'lucide-react'
 import { useState } from 'react'
+import { Link } from 'react-router'
 import { toast } from 'sonner'
 
 import { OpportunityStageBadge } from '@/components/data-display/badges'
@@ -67,7 +68,17 @@ export function OverviewTab({ prospect }: { prospect: Prospect }) {
               { label: 'Current status', value: STATUS_META[prospect.status].label },
               { label: 'Priority', value: prospect.priority[0]!.toUpperCase() + prospect.priority.slice(1) },
               { label: 'Source', value: prospect.source?.name },
-              { label: 'Referred by', value: prospect.referral_name },
+              {
+                label: 'Referred by',
+                value: prospect.referred_by ? (
+                  <Link to={`/prospects/${prospect.referred_by.id}`} className="text-brand-700 hover:underline">
+                    {prospect.referred_by.full_name}
+                  </Link>
+                ) : (
+                  prospect.referral_name
+                ),
+              },
+              { label: 'Referrals given', value: prospect.referrals.length ? <ReferralList items={prospect.referrals} /> : '' },
               { label: 'Insurance interest', value: prospect.insurance_interests.map((i) => i.name).join(', ') },
               { label: 'Existing coverage', value: prospect.existing_coverage },
               { label: 'Affordable premium', value: prospect.budget_range_label },
@@ -521,5 +532,20 @@ function PremiumPaidButton({ id }: { id: number }) {
     <Button variant="secondary" size="sm" onClick={() => paid.mutate()} loading={paid.isPending}>
       Mark paid
     </Button>
+  )
+}
+
+function ReferralList({ items }: { items: Prospect['referrals'] }) {
+  return (
+    <ul className="space-y-1">
+      {items.map((r) => (
+        <li key={r.id}>
+          <Link to={`/prospects/${r.id}`} className="text-brand-700 hover:underline">
+            {r.full_name}
+          </Link>{' '}
+          <span className="text-xs text-ink-500">· {r.status_label}</span>
+        </li>
+      ))}
+    </ul>
   )
 }

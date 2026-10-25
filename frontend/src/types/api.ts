@@ -160,6 +160,9 @@ export interface Prospect extends ProspectListItem {
   qualified_at: string | null
   application_submitted_at: string | null
   policy_issued_at: string | null
+  referral_asked_at: string | null
+  referred_by: ReferralBrief | null
+  referrals: ReferralBrief[]
   archived_at: string | null
   updated_at: string
 }
@@ -200,6 +203,7 @@ export interface ProspectWrite {
   location?: string
   source?: number | null
   referral_name?: string
+  referred_by?: number | null
   insurance_interests?: number[]
   existing_coverage?: string
   budget_range?: string
@@ -536,6 +540,7 @@ export interface ProspectReport {
     conversion_rate: number | null
   }[]
   by_status: StageCount[]
+  top_referrers: { prospect_id: number; name: string; referrals: number; won: number }[]
   definitions: Record<string, string>
 }
 
@@ -690,4 +695,23 @@ export interface ClientEvent {
   opportunity?: { id: number; name: string }
   detail: string
   overdue?: boolean
+}
+
+export interface ReferralBrief {
+  id: number
+  full_name: string
+  status: ProspectStatus
+  status_label: string
+}
+
+export type GoalField = 'new_prospects' | 'appointments' | 'policies' | 'issued_premium'
+
+export interface GoalProgress {
+  month: string
+  pace: number
+  targets: Record<GoalField, number | string | null>
+  actual: Record<GoalField, number | string>
+  has_goals: boolean
+  suggested: Record<GoalField, number | string | null> | null
+  definitions: Record<string, string>
 }

@@ -23,6 +23,7 @@ import { qk } from '@/lib/queryKeys'
 import { formatPercent } from '@/lib/utils'
 import { dashboardService } from '@/services'
 
+import { GoalsCard } from './GoalsCard'
 import { TodayCard } from './TodayCard'
 import {
   ConversionWidget,
@@ -122,7 +123,10 @@ export function DashboardPage() {
         </KpiGrid>
       )}
 
-      <TodayCard />
+      <div className="grid grid-cols-1 gap-4 xl:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
+        <TodayCard />
+        <GoalsCard />
+      </div>
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         <PipelineWidget />

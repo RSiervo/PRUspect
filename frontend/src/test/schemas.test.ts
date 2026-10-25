@@ -4,7 +4,7 @@ import { opportunitySchema, phoneDigits, prospectSchema, type OpportunityFormVal
 
 const base: ProspectFormValues = {
   first_name: 'Maria', last_name: 'Santos', preferred_name: '', mobile: '0917 123 4567', email: '', birth_date: '',
-  occupation: '', company: '', location: '', source: '', referral_name: '', insurance_interests: [],
+  occupation: '', company: '', location: '', source: '', referral_name: '', referred_by: 0, insurance_interests: [],
   existing_coverage: '', budget_range: '', priority: 'medium', status: 'new_lead', notes: '', consent_obtained: false,
   consent_date: '', consent_source: '', preferred_contact_method: 'any', do_not_contact: false,
   schedule_follow_up: false, follow_up_date: '', follow_up_time: '', follow_up_type: 'call', follow_up_subject: '',

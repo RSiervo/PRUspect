@@ -9,6 +9,7 @@ import { toast } from 'sonner'
 import { StatusBadge } from '@/components/data-display/badges'
 import { ErrorState } from '@/components/data-display/states'
 import { FormField, FormSection } from '@/components/forms/FormField'
+import { ProspectPicker } from '@/components/forms/ProspectPicker'
 import { PageHeader } from '@/components/layout/PageHeader'
 import { Button } from '@/components/ui/button'
 import { Input, Select, Textarea } from '@/components/ui/input'
@@ -27,7 +28,7 @@ import { useProspectOptions } from './ChangeStatus'
 
 const makeEmpty = (): ProspectFormValues => ({
   first_name: '', last_name: '', preferred_name: '', mobile: '', email: '', birth_date: '', occupation: '', company: '',
-  location: '', source: '', referral_name: '', insurance_interests: [], existing_coverage: '', budget_range: '',
+  location: '', source: '', referral_name: '', referred_by: 0, insurance_interests: [], existing_coverage: '', budget_range: '',
   priority: 'medium', status: 'new_lead', notes: '', consent_obtained: false, consent_date: '', consent_source: '',
   preferred_contact_method: 'any', do_not_contact: false, schedule_follow_up: true,
   follow_up_date: addDaysKey(todayKey(), 1), follow_up_time: '10:00', follow_up_type: 'call',
@@ -39,7 +40,7 @@ function fromProspect(p: Prospect): ProspectFormValues {
     ...makeEmpty(),
     first_name: p.first_name, last_name: p.last_name, preferred_name: p.preferred_name, mobile: p.mobile, email: p.email,
     birth_date: p.birth_date ?? '', occupation: p.occupation, company: p.company, location: p.location,
-    source: p.source_id ? String(p.source_id) : '', referral_name: p.referral_name,
+    source: p.source_id ? String(p.source_id) : '', referral_name: p.referral_name, referred_by: p.referred_by?.id ?? 0,
     insurance_interests: p.insurance_interests.map((i) => i.id), existing_coverage: p.existing_coverage,
     budget_range: p.budget_range, priority: p.priority, status: p.status, notes: p.notes,
     consent_obtained: p.consent_obtained, consent_date: p.consent_date ?? '', consent_source: p.consent_source,
@@ -52,7 +53,7 @@ function toPayload(values: ProspectFormValues, creating: boolean): ProspectWrite
     first_name: values.first_name, last_name: values.last_name, preferred_name: values.preferred_name,
     mobile: values.mobile, email: values.email, birth_date: values.birth_date || null, occupation: values.occupation,
     company: values.company, location: values.location, source: values.source ? Number(values.source) : null,
-    referral_name: values.referral_name, insurance_interests: values.insurance_interests,
+    referral_name: values.referral_name, referred_by: values.referred_by || null, insurance_interests: values.insurance_interests,
     existing_coverage: values.existing_coverage, budget_range: values.budget_range, priority: values.priority,
     notes: values.notes, consent_obtained: values.consent_obtained, consent_date: values.consent_date || null,
     consent_source: values.consent_source, preferred_contact_method: values.preferred_contact_method,
@@ -212,7 +213,25 @@ export function ProspectFormPage() {
               ))}
             </Select>
           </FormField>
-          <FormField label="Referral name" optional hint={sourceName === 'Referral' ? 'Who referred this prospect?' : undefined} error={errors.referral_name?.message}>
+          <FormField label="Referred by (existing prospect or client)" optional hint="Links the two records and counts toward Top referrers." error={errors.referred_by?.message}>
+            <Controller
+              control={control}
+              name="referred_by"
+              render={({ field }) => (
+                <div className="flex gap-2">
+                  <div className="min-w-0 flex-1">
+                    <ProspectPicker value={field.value || undefined} onChange={(id) => field.onChange(id)} initial={existing.data?.referred_by ?? null} />
+                  </div>
+                  {field.value ? (
+                    <Button type="button" variant="ghost" size="sm" onClick={() => field.onChange(0)}>
+                      Clear
+                    </Button>
+                  ) : null}
+                </div>
+              )}
+            />
+          </FormField>
+          <FormField label="Referral name" optional hint={sourceName === 'Referral' ? 'If the referrer isn’t in PRUspect, type their name.' : undefined} error={errors.referral_name?.message}>
             <Input {...register('referral_name')} />
           </FormField>
           <div className="sm:col-span-2">

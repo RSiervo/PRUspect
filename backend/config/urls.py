@@ -37,6 +37,7 @@ api_v1 = [
     path("settings/demo-data/", prospects.DemoDataView.as_view(), name="settings-demo-data"),
     path("dashboard/summary/", dashboard.SummaryView.as_view(), name="dashboard-summary"),
     path("dashboard/today/", dashboard.TodayView.as_view(), name="dashboard-today"),
+    path("goals/current/", dashboard.GoalsView.as_view(), name="goals-current"),
     path("dashboard/pipeline/", dashboard.PipelineSummaryView.as_view(), name="dashboard-pipeline"),
     path("dashboard/activity/", dashboard.ActivityFeedView.as_view(), name="dashboard-activity"),
     path("dashboard/performance/", dashboard.PerformanceView.as_view(), name="dashboard-performance"),

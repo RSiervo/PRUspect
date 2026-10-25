@@ -46,6 +46,7 @@ export const prospectSchema = z
     location: optionalText(120),
     source: z.string(),
     referral_name: optionalText(120),
+    referred_by: z.number(),
     insurance_interests: z.array(z.number()),
     existing_coverage: optionalText(255),
     budget_range: z.string(),

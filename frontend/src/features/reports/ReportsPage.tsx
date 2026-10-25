@@ -1,6 +1,7 @@
 import { useMutation, useQuery } from '@tanstack/react-query'
 import { Download, Info } from 'lucide-react'
 import type { ReactNode } from 'react'
+import { Link } from 'react-router'
 import { Bar, BarChart, CartesianGrid, Legend, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 import { toast } from 'sonner'
 
@@ -113,6 +114,29 @@ function ProspectsReport({ range }: { range: DateRange }) {
               </table>
             )}
             <div className="mt-3"><Definition>Conversion = prospects from that source that reached Policy Issued ÷ prospects from that source added in the range.</Definition></div>
+          </div>
+        </Card>
+        <Card>
+          <CardHeader title="Top referrers" description="Who referred the prospects added in this range" />
+          <div className="relative overflow-x-auto px-5 pt-3 pb-4">
+            {data.top_referrers.length === 0 ? (
+              <EmptyState compact title="No linked referrals yet" description="Use “Referred by” on a prospect to link who sent them." />
+            ) : (
+              <table className="w-full text-sm">
+                <thead className="text-left text-xs text-ink-500">
+                  <tr><th className="py-2 font-medium">Referrer</th><th className="py-2 text-right font-medium">Referrals</th><th className="py-2 text-right font-medium">Won</th></tr>
+                </thead>
+                <tbody className="divide-y divide-line">
+                  {data.top_referrers.map((r) => (
+                    <tr key={r.prospect_id}>
+                      <td className="py-2"><Link to={`/prospects/${r.prospect_id}`} className="text-ink-800 hover:text-brand-700">{r.name}</Link></td>
+                      <td className="tabular py-2 text-right">{r.referrals}</td>
+                      <td className="tabular py-2 text-right">{r.won}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
           </div>
         </Card>
         <Card>

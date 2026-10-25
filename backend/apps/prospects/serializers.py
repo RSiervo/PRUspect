@@ -56,6 +56,10 @@ class _NamedSerializer(serializers.Serializer):
     name = serializers.CharField()
 
 
+def _referral_brief(p) -> dict:
+    return {"id": p.id, "full_name": p.full_name, "status": p.status, "status_label": p.get_status_display()}
+
+
 class ProspectListSerializer(serializers.ModelSerializer):
     full_name = serializers.CharField(read_only=True)
     source = _NamedSerializer(read_only=True)
@@ -81,18 +85,27 @@ class ProspectListSerializer(serializers.ModelSerializer):
 class ProspectDetailSerializer(ProspectListSerializer):
     source_id = serializers.IntegerField(read_only=True, allow_null=True)
     budget_range_label = serializers.CharField(source="get_budget_range_display", read_only=True)
+    referred_by = serializers.SerializerMethodField()
+    referrals = serializers.SerializerMethodField()
     preferred_contact_method_label = serializers.CharField(
         source="get_preferred_contact_method_display", read_only=True
     )
 
     class Meta(ProspectListSerializer.Meta):
         fields = ProspectListSerializer.Meta.fields + [
-            "source_id", "birth_date", "referral_name", "existing_coverage", "budget_range", "budget_range_label",
+            "source_id", "birth_date", "referral_name", "referred_by", "referrals", "existing_coverage", "budget_range", "budget_range_label",
             "notes", "consent_obtained", "consent_date", "consent_source", "preferred_contact_method",
             "preferred_contact_method_label", "status_changed_at", "qualified_at", "application_submitted_at",
             "policy_issued_at", "referral_asked_at", "archived_at", "updated_at",
         ]
         read_only_fields = fields
+
+    def get_referred_by(self, obj):
+        ref = obj.referred_by
+        return _referral_brief(ref) if ref and not ref.is_archived else None
+
+    def get_referrals(self, obj):
+        return [_referral_brief(r) for r in obj.referrals.filter(is_archived=False).order_by("-created_at")[:50]]
 
 
 class ProspectWriteSerializer(serializers.ModelSerializer):
@@ -101,14 +114,15 @@ class ProspectWriteSerializer(serializers.ModelSerializer):
         queryset=ProductCategory.objects.all(), many=True, required=False
     )
     status = serializers.ChoiceField(choices=ProspectStatus.choices, required=False)
+    referred_by = OwnedPrimaryKeyRelatedField(queryset=Prospect.objects.all(), allow_null=True, required=False)
     initial_follow_up = FollowUpInputSerializer(required=False, allow_null=True, write_only=True)
 
     class Meta:
         model = Prospect
         fields = [
             "first_name", "last_name", "preferred_name", "mobile", "email", "birth_date", "occupation", "company",
-            "location", "source", "referral_name", "insurance_interests", "existing_coverage", "budget_range",
-            "priority", "status", "notes", "consent_obtained", "consent_date", "consent_source",
+            "location", "source", "referral_name", "referred_by", "insurance_interests", "existing_coverage",
+            "budget_range", "priority", "status", "notes", "consent_obtained", "consent_date", "consent_source",
             "preferred_contact_method", "do_not_contact", "initial_follow_up",
         ]
 
@@ -149,6 +163,9 @@ class ProspectWriteSerializer(serializers.ModelSerializer):
         email = attrs.get("email", getattr(self.instance, "email", ""))
         if not mobile and not email:
             raise serializers.ValidationError({"mobile": ["Provide a mobile number or an email address."]})
+        referrer = attrs.get("referred_by")
+        if referrer is not None and self.instance is not None and referrer.pk == self.instance.pk:
+            raise serializers.ValidationError({"referred_by": ["A prospect cannot refer themselves."]})
         if self.instance is not None and "status" in attrs:
             raise serializers.ValidationError({"status": ["Use the change-status action to update status."]})
         return attrs

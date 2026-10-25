@@ -294,8 +294,19 @@ def prospects_report(user, date_from=None, date_to=None) -> dict:
     status_counts = dict(cohort.values_list("status").annotate(n=Count("id")))
     by_status = [{"value": s.value, "label": s.label, "kind": stage_kind(s), "count": status_counts.get(s.value, 0)}
                  for s in STAGE_ORDER]
+    referrer_rows = (
+        cohort.filter(referred_by__isnull=False, referred_by__is_archived=False)
+        .values("referred_by_id", "referred_by__first_name", "referred_by__last_name")
+        .annotate(total=Count("id"), won=Count("id", filter=Q(policy_issued_at__isnull=False)))
+        .order_by("-total", "-won")[:10]
+    )
+    top_referrers = [
+        {"prospect_id": r["referred_by_id"], "name": f"{r['referred_by__first_name']} {r['referred_by__last_name']}".strip(),
+         "referrals": r["total"], "won": r["won"]}
+        for r in referrer_rows
+    ]
     return {"date_from": start, "date_to": end, "total": cohort.count(), "acquisition": months,
-            "sources": sources, "by_status": by_status,
+            "sources": sources, "by_status": by_status, "top_referrers": top_referrers,
             "definitions": {"cohort": "Prospects added between the selected dates (not archived).",
                             "won": "Prospects that reached Policy Issued — Won."}}
 
@@ -434,5 +445,63 @@ def today(user) -> dict:
         "definitions": {
             "stale": f"Active prospects not contacted in the last {STALE_DAYS} days (excludes Do not contact).",
             "no_next_step": "Active prospects without any pending follow-up.",
+        },
+    }
+
+
+# ------------------------------------------------------------------- goals
+
+GOAL_FIELDS = ["new_prospects", "appointments", "policies", "issued_premium"]
+
+
+def goal_progress(user) -> dict:
+    """This month's targets with actual progress and the expected pace for today."""
+    import calendar
+
+    from .models import MonthlyGoal
+
+    tz = user_tz(user)
+    today = local_today(user)
+    first = today.replace(day=1)
+    start, end = month_range(today, tz)
+    goal = MonthlyGoal.objects.filter(owner=user, month=first).first()
+    suggested = None
+    if goal is None:
+        previous = MonthlyGoal.objects.filter(owner=user, month__lt=first).order_by("-month").first()
+        if previous:
+            suggested = {
+                f: (str(getattr(previous, f)) if f == "issued_premium" and getattr(previous, f) is not None else getattr(previous, f))
+                for f in GOAL_FIELDS
+            }
+
+    issued = active_opportunities(user).filter(
+        stage=OpportunityStage.ISSUED, policy_issued_date__gte=first, policy_issued_date__lte=today
+    )
+    actual = {
+        "new_prospects": active_prospects(user).filter(created_at__gte=start, created_at__lt=end).count(),
+        "appointments": active_follow_ups(user)
+        .filter(activity_type__in=APPOINTMENT_TYPES, scheduled_at__gte=start, scheduled_at__lt=end)
+        .exclude(status=FollowUpStatus.CANCELED)
+        .count(),
+        "policies": issued.count(),
+        "issued_premium": _money(issued.aggregate(total=Sum("actual_annualized_premium"))["total"]),
+    }
+    days_in_month = calendar.monthrange(today.year, today.month)[1]
+    targets = {f: (getattr(goal, f) if goal else None) for f in GOAL_FIELDS}
+    if targets["issued_premium"] is not None:
+        targets["issued_premium"] = str(targets["issued_premium"])
+    return {
+        "month": first,
+        "pace": round(today.day / days_in_month, 3),
+        "targets": targets,
+        "actual": actual,
+        "has_goals": goal is not None and any(v is not None for v in targets.values()),
+        "suggested": suggested,
+        "definitions": {
+            "new_prospects": "Prospects added this month.",
+            "appointments": "Meetings and presentations scheduled this month (not canceled).",
+            "policies": "Policies issued this month (by issuance date).",
+            "issued_premium": "Verified annualized premium of policies issued this month.",
+            "pace": "Share of the month that has passed: where you would be if progress were even.",
         },
     }

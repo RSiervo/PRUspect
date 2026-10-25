@@ -26,7 +26,7 @@ const existing = {
   is_demo: false, do_not_contact: false, birth_date: null, referral_name: '', existing_coverage: '', budget_range: '',
   budget_range_label: '', notes: '', consent_obtained: false, consent_date: null, consent_source: '',
   preferred_contact_method: 'any', preferred_contact_method_label: '', status_changed_at: null, qualified_at: null,
-  application_submitted_at: null, policy_issued_at: null, archived_at: null, updated_at: '2026-10-01T00:00:00Z',
+  application_submitted_at: null, policy_issued_at: null, referral_asked_at: null, referred_by: null, referrals: [], archived_at: null, updated_at: '2026-10-01T00:00:00Z',
 } as Prospect
 
 const routes = [

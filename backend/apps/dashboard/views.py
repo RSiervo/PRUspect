@@ -76,3 +76,42 @@ class TodayView(APIView):
         data["agenda"] = FollowUpSerializer(data["agenda"], many=True, context=context).data
         data["overdue"] = FollowUpSerializer(data["overdue"], many=True, context=context).data
         return Response(data)
+
+
+class GoalsView(APIView):
+    """GET this month's goals and progress; PUT to set this month's targets."""
+
+    def get(self, request):
+        return Response(metrics.goal_progress(request.user))
+
+    def put(self, request):
+        from decimal import Decimal, InvalidOperation
+
+        from rest_framework.exceptions import ValidationError
+
+        from apps.common.timeutils import local_today
+
+        from .models import MonthlyGoal
+
+        values, errors = {}, {}
+        for field in metrics.GOAL_FIELDS:
+            raw = request.data.get(field)
+            if raw in (None, ""):
+                values[field] = None
+                continue
+            try:
+                number = Decimal(str(raw).replace(",", "")) if field == "issued_premium" else int(raw)
+            except (InvalidOperation, ValueError, TypeError):
+                errors[field] = ["Enter an amount." if field == "issued_premium" else "Enter a whole number."]
+                continue
+            limit = 10**10 if field == "issued_premium" else 100000
+            if number < 0 or number > limit:
+                errors[field] = ["Enter a realistic positive number."]
+                continue
+            values[field] = number
+        if errors:
+            raise ValidationError(errors)
+        MonthlyGoal.objects.update_or_create(
+            owner=request.user, month=local_today(request.user).replace(day=1), defaults=values
+        )
+        return Response(metrics.goal_progress(request.user))
